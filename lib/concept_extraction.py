@@ -124,3 +124,40 @@ def bfs_group_by_knn(root):
       queue.append(p)
   return grouped
 
+def get_pieces_from_ids(ids, complete_subset, remove_prefix=False):
+  pieces = []
+  for i in list(ids):
+    tk = complete_subset[i]
+    tk = tk if not remove_prefix else tk.replace('▁', '')
+    pieces.append(tk)
+  if remove_prefix:
+    pieces = list(set(pieces))
+  return pieces
+
+
+def cluster_and_store(embeddings, wordpieces, output_file_name = 'glove_clusters.json'):
+  """cluster and store the embeddings. 
+  
+  Note: the embedding index should map to wordpieces index.
+  """
+  rids = list(range(0, len(complete_subset)))
+  child_knns = [125, 100, 75, 50, 25, 12, 6]
+  root = Node(rids, child_knns[0], uid='0')
+  dfs_partitioning(root, child_knns[1:], subset_embedding.weight.detach())
+  grouped = bfs_group_by_knn(root)
+  # serialize and store.
+  grouped_k = {}
+  for knn in child_knns:
+    if knn not in grouped_k:
+      grouped_k[knn] = []
+    for g in grouped[knn]:
+      grouped_k[knn].append({
+        'uid': g.uid,
+        'knn': g.knn,
+        'rids': g.rids,
+        'tokens': sorted(get_pieces_from_ids(g.rids, complete_subset)),
+        'strats': g.strats,
+        'childs': [c.uid for c in g.node_paritions]
+      })
+  with open(output_file_name, 'w') as f:
+      json.dump(grouped_k, f)
