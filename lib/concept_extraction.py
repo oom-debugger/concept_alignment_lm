@@ -161,3 +161,20 @@ def cluster_and_store(embeddings, wordpieces, output_file_name = 'glove_clusters
       })
   with open(output_file_name, 'w') as f:
       json.dump(grouped_k, f)
+  return grouped_k
+
+
+  def load_hierarchical_clusters(file_name='glove_clusters.json'):
+    with open(file_name) as f:
+      glove_clusters = json.load(f)
+    return glove_clusters
+
+  
+  def print_cluster(hierarchical_clusters, cluster_name, k, print_children = False):
+    k = str(k) if isinstance(list(hierarchical_clusters.keys())[0], str) else int(k)
+    for i, c in enumerate(hierarchical_clusters[k]):
+      if print_children and c['uid'].startswith(cluster_name + '_'):
+        print(c['uid'], len(c['tokens']), c['tokens'])
+      elif  c['uid'] == cluster_name:
+        print(c['uid'], len(c['tokens']), c['tokens'])
+
