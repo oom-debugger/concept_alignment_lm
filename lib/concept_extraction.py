@@ -1,4 +1,4 @@
-""" Hierachical community extraction from embedding space.
+""" Hierarchical community extraction from embedding space.
 required packages:
 !pip install networkx
 !pip install transformers
