@@ -74,7 +74,7 @@ def get_albert(knns = [125, 100, 75, 50, 25, 12, 6]):
     output_file_name='albert_xxl_clusters.json',
   )
 
-  def get_glove(knns = [200, 125, 100, 75, 50, 25, 12, 6], vocab_list = None):
+  def get_glove(vocab_list = None, knns = [200, 125, 100, 75, 50, 25, 12, 6]):
     """Get Glove clusters. 
     
     Note: to get the values reported in the paper, you need to get the subset of Albert adn Glove tokens.
@@ -85,6 +85,7 @@ def get_albert(knns = [125, 100, 75, 50, 25, 12, 6]):
     # len(glove_vocab)
     embeddings = torch.nn.Embedding.from_pretrained(myvec.vectors,freeze=True)
     if vocab_list:
+      complete_subset = list(set(glove_vocab).intersection(vocab_list))
       # Note: to get the values reported in the paper, you need to get the subset of Albert adn Glove tokens.
       subset_embedding = torch.nn.Embedding(len(vocab_list),  embeddings.weight.shape[1])
       subset_embedding.weight = torch.nn.Parameter(myvec.get_vecs_by_tokens(vocab_list))
@@ -94,7 +95,7 @@ def get_albert(knns = [125, 100, 75, 50, 25, 12, 6]):
       embeddings=embeddings if not vocab_list else subset_embedding, 
       wordpieces=glove_vocab  if not vocab_list else vocab_list, 
       knns=knns,
-      output_file_name='albert_xxl_clusters.json',
+      output_file_name='glove_clusters.json',
     )
 
 
@@ -110,6 +111,13 @@ def main():
     get_t5()
   elif args.model.lower() == 'mt5':
     get_mt5()
+  elif args.model.lower() == 'glove':
+    vocab_list = []
+    # # This is to get the clusters for the intersection of glove and ALBERT.
+    # tokenizer = AlbertTokenizer.from_pretrained('albert-base-v2')
+    # raw_wordpieces = tokenizer.sp_model.id_to_piece(list(range(0, 29999)))
+    # vocab_list = list(set([tk.replace('▁', '') for tk in raw_wordpieces]))
+    # get_glove()
   else:
     raise ValueError('Unsupported Model Name. Pick from [Albert, T5, mT5, Gemma]')
 
