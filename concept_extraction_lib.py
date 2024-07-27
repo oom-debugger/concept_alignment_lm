@@ -135,13 +135,13 @@ def get_pieces_from_ids(ids, complete_subset, remove_prefix=False):
   return pieces
 
 
-def cluster_and_store(embeddings, wordpieces, output_file_name = 'glove_clusters.json'):
+def cluster_and_store(embeddings, wordpieces, knns, output_file_name = 'glove_clusters.json'):
   """cluster and store the embeddings. 
   
   Note: the embedding index should map to wordpieces index.
   """
   rids = list(range(0, len(complete_subset)))
-  child_knns = [125, 100, 75, 50, 25, 12, 6]
+  child_knns = knns # [125, 100, 75, 50, 25, 12, 6]
   root = Node(rids, child_knns[0], uid='0')
   dfs_partitioning(root, child_knns[1:], subset_embedding.weight.detach())
   grouped = bfs_group_by_knn(root)
