@@ -105,7 +105,7 @@ def dfs_partitioning(cur_node, child_knns, embeddings):
   parts = get_h_partitions(cur_node.rids, cur_node.knn, cur_node.strats, embeddings) # , threshold=threshold)
   for uid, p in enumerate(parts):
     cknn = child_knns[0] if child_knns else 1
-    cstrat = 'run_louvain'
+    cstrat = None # 'run_louvain'
     new_child = Node(p, cknn, part_strats=cstrat, uid=f'{cur_node.uid}_{str(uid)}')
     cur_node.add_child(new_child)
     if child_knns:
