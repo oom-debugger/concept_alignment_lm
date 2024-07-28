@@ -6,22 +6,10 @@ required packages:
 !pip install sentencepiece
 !pip install torch
 """
-import copy
+from typing import List
 import json
-import math
-import time
-
 import numpy as np
-import torch.nn as nn
-import torch.nn.functional as F
-
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from mpl_toolkits.mplot3d import Axes3D
 import umap
-
-import scipy
 import networkx as nx
 
 
@@ -54,7 +42,7 @@ def get_fuzzy_graph(embeddings, n_neighbors, metric='minkowski', local_connectiv
 
 
 class Node:
-  def __init__(self, rids: list[int], knn: list[int], uid: str, part_strats = None):
+  def __init__(self, rids: List[int], knn: List[int], uid: str, part_strats = None):
     self.uid = uid
     self.knn = knn
     self.rids = rids
@@ -140,10 +128,10 @@ def cluster_and_store(embeddings, wordpieces, knns, output_file_name = 'glove_cl
   
   Note: the embedding index should map to wordpieces index.
   """
-  rids = list(range(0, len(complete_subset)))
+  rids = list(range(0, len(wordpieces)))
   child_knns = knns # [125, 100, 75, 50, 25, 12, 6]
   root = Node(rids, child_knns[0], uid='0')
-  dfs_partitioning(root, child_knns[1:], subset_embedding.weight.detach())
+  dfs_partitioning(root, child_knns[1:], embeddings)
   grouped = bfs_group_by_knn(root)
   # serialize and store.
   grouped_k = {}
@@ -155,7 +143,7 @@ def cluster_and_store(embeddings, wordpieces, knns, output_file_name = 'glove_cl
         'uid': g.uid,
         'knn': g.knn,
         'rids': g.rids,
-        'tokens': sorted(get_pieces_from_ids(g.rids, complete_subset)),
+        'tokens': sorted(get_pieces_from_ids(g.rids, wordpieces)),
         'strats': g.strats,
         'childs': [c.uid for c in g.node_paritions]
       })
@@ -164,17 +152,17 @@ def cluster_and_store(embeddings, wordpieces, knns, output_file_name = 'glove_cl
   return grouped_k
 
 
-  def load_hierarchical_clusters(file_name='glove_clusters.json'):
-    with open(file_name) as f:
-      glove_clusters = json.load(f)
-    return glove_clusters
+def load_hierarchical_clusters(file_name='glove_clusters.json'):
+  with open(file_name) as f:
+    glove_clusters = json.load(f)
+  return glove_clusters
 
-  
-  def print_cluster(hierarchical_clusters, cluster_name, k, print_children = False):
-    k = str(k) if isinstance(list(hierarchical_clusters.keys())[0], str) else int(k)
-    for i, c in enumerate(hierarchical_clusters[k]):
-      if print_children and c['uid'].startswith(cluster_name + '_'):
-        print(c['uid'], len(c['tokens']), c['tokens'])
-      elif  c['uid'] == cluster_name:
-        print(c['uid'], len(c['tokens']), c['tokens'])
+
+def print_cluster(hierarchical_clusters, cluster_name, k, print_children = False):
+  k = str(k) if isinstance(list(hierarchical_clusters.keys())[0], str) else int(k)
+  for i, c in enumerate(hierarchical_clusters[k]):
+    if print_children and c['uid'].startswith(cluster_name + '_'):
+      print(c['uid'], len(c['tokens']), c['tokens'])
+    elif  c['uid'] == cluster_name:
+      print(c['uid'], len(c['tokens']), c['tokens'])
 
