@@ -1,6 +1,7 @@
 # Commands:
-## To run clustering
-python3 extract_communities.py --model=albert
+## Clustering:
+> python3 extract_communities.py --model=albert
+
 
 # required packages:
 !pip install -q networkx
