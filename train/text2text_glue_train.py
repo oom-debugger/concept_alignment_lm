@@ -14,11 +14,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers import AutoModelForSeq2SeqLM, T5ForConditionalGeneration
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 
+import utils.io_lib as io_lib
+
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-model", "--model", dest = "model", default = "Albert", help="huggingface model name or local path.")
 parser.add_argument("-base_dir", "--base_dir", dest = "base_dir", default = None, help="Base directory to save artifacts.")
-
+parser.add_argument("-baseline_config", "--baseline_config", dest = "baseline_config", default = "pretrain/configs/default.yaml", help="Yaml default config file name")
+parser.add_argument("-update_config", "--update_config", dest = "update_config", default = None, help="(optional:) Yaml config file name. it updates the present fields in the baseline config.")
 
 def get_glue_datasets():
   tasks = ['ax', 'cola', 'mnli', 'mnli_matched', 'mnli_mismatched', 'mrpc', 'qnli', 'qqp', 'rte', 'sst2', 'stsb', 'wnli']
@@ -219,19 +222,9 @@ def train_and_eval_glue(
 def main():
   args = parser.parse_args()
   # TODO: parse yaml SFT config
-  sft_config = {
-    batch_size = 8
-    num_train_epochs = 3.0
-    # report_to="wandb",  # this tells the Trainer to log the metrics to W&B
-    save_strategy='epoch',
-    optim = "adamw_torch",
-    adam_epsilon=1e-8,
-    # lr_scheduler_type options: [linear_with_warmup, cosine, cosine_with_restarts, polynomial, constant, constant_with_warmup, inverse_sqrt]
-    lr_scheduler_type="linear", 
-    bf16=True,
-    learning_rate=1e-5,
-    warmup_ratio = 0.1,
-  }
+  config = io_lib.get_config(default_filepath=args.baseline_config, update_filepath=args.update_config)
+
+  sft_config = config['sft']
   model_name = args.model #"google-t5/t5-small"
   # 1. Load Raw Datasets
   glue_datasets = get_glue_datasets()
