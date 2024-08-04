@@ -18,10 +18,12 @@ import utils.io_lib as io_lib
 
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument("-model", "--model", dest = "model", default = "Albert", help="huggingface model name or local path.")
-parser.add_argument("-base_dir", "--base_dir", dest = "base_dir", default = None, help="Base directory to save artifacts.")
-parser.add_argument("-baseline_config", "--baseline_config", dest = "baseline_config", default = "concept_alignment_lm/configs/glue_baseline.yaml", help="Yaml default config file name")
-parser.add_argument("-update_config", "--update_config", dest = "update_config", default = None, help="(optional:) Yaml config file name. it updates the present fields in the baseline config.")
+parser.add_argument("-model", "--model", dest = "model", default = None, help="huggingface model name or local path.", required=True)
+parser.add_argument("-tasks", "--tasks", dest = "tasks", default = None, help="Comma separated list of glue tasks to run. If present only run these task, otherwise run all Glue tasks.", required=False)
+parser.add_argument("-base_dir", "--base_dir", dest = "base_dir", default = None, help="Base directory to save artifacts.", required=True)
+parser.add_argument("-baseline_config", "--baseline_config", dest = "baseline_config", default = "concept_alignment_lm/configs/glue_baseline.yaml", help="Yaml default config file name", required=True)
+parser.add_argument("-update_config", "--update_config", dest = "update_config", default = None, help="(optional:) Yaml config file name. it updates the present fields in the baseline config.", required=False)
+
 
 def get_glue_datasets():
   tasks = ['ax', 'cola', 'mnli', 'mnli_matched', 'mnli_mismatched', 'mrpc', 'qnli', 'qqp', 'rte', 'sst2', 'stsb', 'wnli']
@@ -228,7 +230,8 @@ def main():
   model_name = args.model #"google-t5/t5-small"
   # 1. Load Raw Datasets
   glue_datasets = get_glue_datasets()
-  for task_name in glue_datasets['train_sets'].keys():
+  tasks = arg.tasks.split(',') if arg.tasks else glue_datasets['train_sets'].keys()
+  for task_name in tasks:
     train_and_eval_glue(
       model_name,
       sft_dict=sft_config,
