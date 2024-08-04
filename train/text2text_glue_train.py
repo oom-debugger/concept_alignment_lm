@@ -20,7 +20,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-model", "--model", dest = "model", default = "Albert", help="huggingface model name or local path.")
 parser.add_argument("-base_dir", "--base_dir", dest = "base_dir", default = None, help="Base directory to save artifacts.")
-parser.add_argument("-baseline_config", "--baseline_config", dest = "baseline_config", default = "pretrain/configs/default.yaml", help="Yaml default config file name")
+parser.add_argument("-baseline_config", "--baseline_config", dest = "baseline_config", default = "concept_alignment_lm/configs/glue_baseline.yaml", help="Yaml default config file name")
 parser.add_argument("-update_config", "--update_config", dest = "update_config", default = None, help="(optional:) Yaml config file name. it updates the present fields in the baseline config.")
 
 def get_glue_datasets():
@@ -224,7 +224,7 @@ def main():
   # TODO: parse yaml SFT config
   config = io_lib.get_config(default_filepath=args.baseline_config, update_filepath=args.update_config)
 
-  sft_config = config['sft']
+  sft_config = config['sft_config']
   model_name = args.model #"google-t5/t5-small"
   # 1. Load Raw Datasets
   glue_datasets = get_glue_datasets()
