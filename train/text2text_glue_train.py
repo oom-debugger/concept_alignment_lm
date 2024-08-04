@@ -8,13 +8,13 @@ import warnings
 from functools import partial
 from sklearn.metrics import classification_report
 
-from datasets import load_dataset, concatenate_datasets, shuffle
+from datasets import load_dataset, concatenate_datasets
 from transformers import TrainingArguments
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers import AutoModelForSeq2SeqLM, T5ForConditionalGeneration
 from trl import SFTConfig, SFTTrainer, DataCollatorForCompletionOnlyLM
 
-import utils.io_lib as io_lib
+from utils import get_config
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -23,6 +23,8 @@ parser.add_argument("-tasks", "--tasks", dest = "tasks", default = None, help="C
 parser.add_argument("-base_dir", "--base_dir", dest = "base_dir", default = None, help="Base directory to save artifacts.", required=True)
 parser.add_argument("-baseline_config", "--baseline_config", dest = "baseline_config", default = "concept_alignment_lm/configs/glue_baseline.yaml", help="Yaml default config file name", required=True)
 parser.add_argument("-update_config", "--update_config", dest = "update_config", default = None, help="(optional:) Yaml config file name. it updates the present fields in the baseline config.", required=False)
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 def get_glue_datasets(tasks):
@@ -77,59 +79,59 @@ def get_label(task, label):
 
 # entailment (0), neutral (1), contradiction (2)
 def formatting_prompts(
-    examples,
-    task,
-    instruction_template, # = ' ### input:',
-    response_template, # = ' ### Label:',
-    is_inference = False,  # to enable using as part of map function.
-    ):
-    output_texts = []
-    input_keys = list(examples.keys())
-    input_keys.remove('label')
-    input_keys.remove('idx')
-    batch_size = len(examples['label'])
-    for i in range(batch_size):
-      input_text = '** '.join([f'{k}: {examples[k][i]} ' for k in input_keys])
-      if not is_inference:
-        text = f"{instruction_template} {input_text}\n {response_template} {get_label(task, examples['label'][i])}"
-      else:
-        # text = f"{instruction_template} {input_text}\n {response_template} {get_label(task, examples['label'][i])}"
-        text = f"{instruction_template} {input_text}\n {response_template} "
-      output_texts.append(text)
-    return {'text': output_texts} if is_inference else output_texts
+  examples,
+  task,
+  instruction_template, # = ' ### input:',
+  response_template, # = ' ### Label:',
+  is_inference = False,  # to enable using as part of map function.
+  ):
+  output_texts = []
+  input_keys = list(examples.keys())
+  input_keys.remove('label')
+  input_keys.remove('idx')
+  batch_size = len(examples['label'])
+  for i in range(batch_size):
+    input_text = '** '.join([f'{k}: {examples[k][i]} ' for k in input_keys])
+    if not is_inference:
+      text = f"{instruction_template} {input_text}\n {response_template} {get_label(task, examples['label'][i])}"
+    else:
+      # text = f"{instruction_template} {input_text}\n {response_template} {get_label(task, examples['label'][i])}"
+      text = f"{instruction_template} {input_text}\n {response_template} "
+    output_texts.append(text)
+  return {'text': output_texts} if is_inference else output_texts
 
 
 def inference_and_eval(
-    model,
-    tokenizer,
-    task_name,
-    eval_dataset,
-    formatting_prompts_fnc, 
-    eval = True):
-      """Run the classification eval on the text2text model."""
-      inference_model = model.to(device=f'cuda:{torch.cuda.current_device()}')
-      inference_tokenizer = tokenizer
-      # small_dataset = eval_dataset[task_name].select(range(100))
-      updated_dataset = eval_dataset.map(formatting_prompts_fnc, batched=True, remove_columns=list(eval_dataset.features.keys()))
-      inputs = inference_tokenizer(updated_dataset['text'], return_tensors="pt", padding=True)
-      inputs["input_ids"] = inputs["input_ids"].to(device=f'cuda:{torch.cuda.current_device()}')
-      inputs["attention_mask"] = inputs["attention_mask"].to(device=f'cuda:{torch.cuda.current_device()}')
-      output_sequences = inference_model.generate(
-          input_ids=inputs["input_ids"],
-          attention_mask=inputs["attention_mask"],
-          do_sample=False,  # disable sampling to test if batching affects output
-      )
-      pred = inference_tokenizer.batch_decode(output_sequences, skip_special_tokens=True)
-      eval_report = None
-      if eval:
-        truth = [get_label(task_name, label) for label in eval_dataset['label']]
-        # convert the labels to avoid having lots of garbage labels (since it is a generative model).
-        target_names = list(set(truth))
-        target_names.append('other')
-        pred = ['other' if p not in target_names else p for p in pred]
-        print('binary accuracy is: ', sum([int(p == t) for p, t in zip(pred, truth)]) / len(pred))
-        eval_report = classification_report(truth, pred, target_names=target_names, output_dict=True)
-      return pred, eval_report
+  model,
+  tokenizer,
+  task_name,
+  eval_dataset,
+  formatting_prompts_fnc, 
+  eval = True):
+    """Run the classification eval on the text2text model."""
+    inference_model = model.to(device=f'cuda:{torch.cuda.current_device()}')
+    inference_tokenizer = tokenizer
+    # small_dataset = eval_dataset[task_name].select(range(100))
+    updated_dataset = eval_dataset.map(formatting_prompts_fnc, batched=True, remove_columns=list(eval_dataset.features.keys()))
+    inputs = inference_tokenizer(updated_dataset['text'], return_tensors="pt", padding=True)
+    inputs["input_ids"] = inputs["input_ids"].to(device=f'cuda:{torch.cuda.current_device()}')
+    inputs["attention_mask"] = inputs["attention_mask"].to(device=f'cuda:{torch.cuda.current_device()}')
+    output_sequences = inference_model.generate(
+        input_ids=inputs["input_ids"],
+        attention_mask=inputs["attention_mask"],
+        do_sample=False,  # disable sampling to test if batching affects output
+    )
+    pred = inference_tokenizer.batch_decode(output_sequences, skip_special_tokens=True)
+    eval_report = None
+    if eval:
+      truth = [get_label(task_name, label) for label in eval_dataset['label']]
+      # convert the labels to avoid having lots of garbage labels (since it is a generative model).
+      target_names = list(set(truth))
+      target_names.append('other')
+      pred = ['other' if p not in target_names else p for p in pred]
+      print('binary accuracy is: ', sum([int(p == t) for p, t in zip(pred, truth)]) / len(pred))
+      eval_report = classification_report(truth, pred, target_names=target_names, output_dict=True)
+    return pred, eval_report
 
 
 def train_and_eval_glue(
@@ -141,99 +143,87 @@ def train_and_eval_glue(
   task_name,
   instruction_template,
   response_template):
-    """Train and evaluate the Glue benchmark, and store the results and model in the base_dir."""
-    eval_file = os.path.join(base_dir, f"{model_name}_{task_name}_eval.json")
-    if os.path.isfile(eval_file):
-      print(f"Skipping {eval_file} since it already exists.")
-      continue 
-  
-    formatting_prompts_func = partial(
-        formatting_prompts,
-        task = task_name,
-        instruction_template = instruction_template,
-        response_template = response_template,
-    )
-    # 2. train for each task
-    if isinstance(model_name,str):
-      if 't5' in model_name: # encoder-decoder models, e.g. "google-t5/t5-small"
-        model = T5ForConditionalGeneration.from_pretrained(model_name)
-      else:  # decoder only, e.g. Gemma
-        model = AutoModelForCausalLM.from_pretrained(model_name)
-      tokenizer = AutoTokenizer.from_pretrained(model_name)
-    else:
-      model = model_name[0]
-      tokenizer = model_name[1]
-    # 2.2. data collator for text generation.
-    collator = DataCollatorForCompletionOnlyLM(
-        # instruction_template=instruction_template,
-        response_template=response_template, 
-        tokenizer=tokenizer)
-    # 2.3. defining SFT trainer.
-    # training_args = TrainingArguments(
-    sft_dict.update(dict(output_dir=f"{model_name}_{task_name}_checkpoints/"))
-    training_args = SFTConfig(**sft_dict)
+  """Train and evaluate the Glue benchmark, and store the results and model in the base_dir."""
+  eval_file = os.path.join(base_dir, f"{model_name}_{task_name}_eval.json")
+  if os.path.isfile(eval_file):
+    print(f"Skipping {eval_file} since it already exists.")
+    return 
 
-    trainer = SFTTrainer(
-        model,
-        train_dataset=train_dataset,
-        args=training_args,
-        formatting_func=formatting_prompts_func,
-        data_collator=collator,
-        # optimizers=(optim, scheduler),
-        packing=False if collator else True,  # packing=False Can make training 5x faster for short sequences.
-    )
-    # 2.4 train and save the model.
-    trainer.train()
-    model.save_pretrained(os.path.join(base_dir, f"{model_name}_{task_name}"))
-    tokenizer.save_pretrained(os.path.join(base_dir,f"{model_name}_{task_name}"))
-  
-    # 3. evaluate
-    formatting_prompts_func_inf = partial(
-        formatting_prompts,
-        task = task_name,
-        instruction_template = instruction_template,
-        response_template = response_template,
-        is_inference=True
-    )
-    eval_dataset=eval_dataset
-    predictions, eval_report = inference_and_eval(
-        model, tokenizer, 
-        task_name, eval_dataset, 
-        formatting_prompts_func_inf,
-        eval=True)
-    
-    # 4. Write  the eval numbers, (the model and tokenizer is already saved).
-    formatting_prompts_func_inf = partial(
-        formatting_prompts,
-        task = task_name,
-        instruction_template = instruction_template,
-        response_template = response_template,
-        is_inference = True
-    )
-    eval_dataset= glue_datasets['val_sets'][task_name]
-    predictions, eval_report = inference_and_eval(
-        model, tokenizer, 
-        task_name, eval_dataset, 
-        formatting_prompts_func_inf, eval=True)
-    with open(eval_file, 'w') as f:
-      json.dump(eval_report, f)
-    # pprint.pp(eval_report)
+  formatting_prompts_func = partial(
+      formatting_prompts,
+      task = task_name,
+      instruction_template = instruction_template,
+      response_template = response_template,
+  )
+  # 2. train for each task
+  if isinstance(model_name,str):
+    if 't5' in model_name: # encoder-decoder models, e.g. "google-t5/t5-small"
+      model = T5ForConditionalGeneration.from_pretrained(model_name)
+    else:  # decoder only, e.g. Gemma
+      model = AutoModelForCausalLM.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+  else:
+    model = model_name[0]
+    tokenizer = model_name[1]
+  # 2.2. data collator for text generation.
+  collator = DataCollatorForCompletionOnlyLM(
+      # instruction_template=instruction_template,
+      response_template=response_template, 
+      tokenizer=tokenizer)
+  # 2.3. defining SFT trainer.
+  # training_args = TrainingArguments(
+  sft_dict.update(dict(output_dir=f"{model_name}_{task_name}_checkpoints/"))
+  training_args = SFTConfig(**sft_dict)
 
+  trainer = SFTTrainer(
+      model,
+      train_dataset=train_dataset,
+      args=training_args,
+      formatting_func=formatting_prompts_func,
+      data_collator=collator,
+      # optimizers=(optim, scheduler),
+      packing=False if collator else True,  # packing=False Can make training 5x faster for short sequences.
+  )
+  # 2.4 train and save the model.
+  trainer.train()
+  model.save_pretrained(os.path.join(base_dir, f"{model_name}_{task_name}"))
+  tokenizer.save_pretrained(os.path.join(base_dir,f"{model_name}_{task_name}"))
+
+  # 3. evaluate
+  formatting_prompts_func_inf = partial(
+      formatting_prompts,
+      task = task_name,
+      instruction_template = instruction_template,
+      response_template = response_template,
+      is_inference=True
+  )
+  eval_dataset=eval_dataset
+  predictions, eval_report = inference_and_eval(
+      model, tokenizer, 
+      task_name, eval_dataset, 
+      formatting_prompts_func_inf,
+      eval=True)
+  
+  # 4. Write  the eval numbers, (the model and tokenizer is already saved).
+  with open(eval_file, 'w') as f:
+    json.dump(eval_report, f)
+  # pprint.pp(eval_report)
+  return predictions
 
 def main():
   args = parser.parse_args()
   # TODO: parse yaml SFT config
-  config = io_lib.get_config(default_filepath=args.baseline_config, update_filepath=args.update_config)
+  config = get_config(default_filepath=args.baseline_config, update_filepath=args.update_config)
 
   sft_config = config['sft_config']
   model_name = args.model #"google-t5/t5-small"
   # 1. Load Raw Datasets
   tasks = ['ax', 'cola', 'mnli', 'mnli_matched', 'mnli_mismatched', 'mrpc', 'qnli', 'qqp', 'rte', 'sst2', 'stsb', 'wnli']
-  if arg.tasks:
-    tasks = arg.tasks.split(',')
-  glue_datasets = get_glue_datasets()
+  if args.tasks:
+    tasks = args.tasks.split(',')
+  glue_datasets = get_glue_datasets(tasks)
   # 2. run train and eval for all tasks.
-  for task_name in tasks:
+  for task_name in glue_datasets['train_sets'].keys():
     train_and_eval_glue(
       model_name,
       sft_dict=sft_config,
