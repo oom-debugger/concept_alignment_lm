@@ -21,3 +21,5 @@
 !pip install -q sentencepiece  <br>
 !pip install -q datasets  <br>
 !pip install -q trl  <br>
+!pip install -q peft  <br>
+!pip install -q accelerate -U  <br>
