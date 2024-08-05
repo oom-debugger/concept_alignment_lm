@@ -229,7 +229,7 @@ def main():
       sft_dict=sft_config,
       base_dir=args.base_dir,
       train_dataset=glue_datasets['train_sets'][task_name],
-      eval_dataset=glue_datasets['test_sets'][task_name],
+      eval_dataset=glue_datasets['val_sets'][task_name],
       task_name=task_name,
       instruction_template=' ### Question:',
       response_template=' ### Answer:')
