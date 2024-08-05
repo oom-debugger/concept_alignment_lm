@@ -23,3 +23,8 @@
 !pip install -q trl  <br>
 !pip install -q peft  <br>
 !pip install -q accelerate -U  <br>
+
+
+## Notes:
+
+HuggingFace Glue dataset, test-split, for some of the tasks the dataset contains invalid labels (-1). Thus we only train set for the training and validation set for the evaluations. <br>
