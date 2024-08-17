@@ -1,7 +1,7 @@
 
 sft_config:
-  per_device_train_batch_size: 8
-  report_to: None
+  per_device_train_batch_size: 4
+  report_to: none
   num_train_epochs: 3.0
   # report_to="wandb",  # this tells the Trainer to log the metrics to W&B
   save_strategy: epoch

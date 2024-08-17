@@ -123,7 +123,7 @@ def get_pieces_from_ids(ids, complete_subset, remove_prefix=False):
   return pieces
 
 
-def cluster_and_store(embeddings, wordpieces, knns, output_file_name = 'glove_clusters.json'):
+def cluster_and_store(embeddings, wordpieces, knns, output_file_path):
   """cluster and store the embeddings. 
   
   Note: the embedding index should map to wordpieces index.
@@ -147,7 +147,7 @@ def cluster_and_store(embeddings, wordpieces, knns, output_file_name = 'glove_cl
         'strats': g.strats,
         'childs': [c.uid for c in g.node_paritions]
       })
-  with open(output_file_name, 'w') as f:
+  with open(output_file_path, 'w') as f:
       json.dump(grouped_k, f)
   return grouped_k
 
