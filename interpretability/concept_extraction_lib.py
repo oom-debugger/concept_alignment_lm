@@ -75,7 +75,7 @@ def get_h_partitions(rids, knn, strat, embeddings, resolution = 1, threshold = 1
     lv_partitions = nx.community.label_propagation_communities(G_)
   elif strat == 'run_louvain':
     # louvain
-    lv_partitions = list(nx.community.louvain_partitions(G_, weight='weight', resolution=resolution, threshold=threshold, seed=None))
+    lv_partitions = list(nx.community.louvain_partitions(G_, weight='weight', resolution=resolution, threshold=threshold, seed=42))
     lv_partitions = lv_partitions[1] if len(lv_partitions) > 2 else lv_partitions[0]
   # elif strat == 'run_girwan':
   #   lv_partitions = list(nx.community.girvan_newman(G_))
