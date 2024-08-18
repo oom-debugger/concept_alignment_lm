@@ -1,6 +1,6 @@
 """ API invocatoins to extract clusters for ALBERT, T5, and GloVE.
 
->  python3 interpretability/extract_communities.py  --model="albert-xxlarge-v2"  --output_dir=/home/mehrdad/clusters
+>  python3 interpretability/extract_communities.py  --model="albert-xxlarge-v2"  --partition_strategy=run_leiden  --output_dir=/home/mehrdad/clusters
 """
 import os
 import copy
@@ -18,6 +18,10 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-model", "--model", dest = "model", default = "albert-xxlarge-v2", help="model name")
 parser.add_argument("-output_dir", "--output_dir", dest = "output_dir", default = None, required=True, help="output path for the cluster file.")
+parser.add_argument("-partition_strategy", "--partition_strategy", dest = "partition_strategy", default = None, choices=['run_leiden', 'run_louvain'], 
+                    help="partitioning strategy. Select between Louvain and Leiden.")
+parser.add_argument("-is_input_layer", "--is_input_layer", dest = "is_input_layer", default = True, type=bool, 
+                    help="if set uses input embedding layer to cluster tokens, otherwise uses the decoder layer.")
 
 
 # Settings the warnings to be ignored 
@@ -32,7 +36,8 @@ warnings.filterwarnings('ignore')
 #   model = AutoModel.from_pretrained(model_name)
 
 
-def get_Gemma(model_name="google/gemma-2b", out_dir = './' , knns = [125, 100, 75, 50, 25, 12, 6]):
+# def get_Gemma(model_name="google/gemma-2b", out_dir = './' , knns = [125, 100, 75, 50, 25, 12, 6], partition_strategy = None):
+def get_Gemma(model_name, out_dir, knns, partition_strategy = None):
   """get Gemma clusters. You need to login and authenticate your account on HuggingFace."""
   tokenizer = AutoTokenizer.from_pretrained(model_name)
   raw_wordpieces = []
@@ -50,11 +55,12 @@ def get_Gemma(model_name="google/gemma-2b", out_dir = './' , knns = [125, 100, 7
     wordpieces=raw_wordpieces,
     knns=knns,
     output_file_path=output_file_path,
+    partition_strategy=partition_strategy,
   )
 
-def get_t5(model_name="google-t5/t5-small", out_dir = './', knns = [125, 100, 75, 50, 25, 12, 6]):
+# def get_t5(model_name="google-t5/t5-small", out_dir = './', knns = [125, 100, 75, 50, 25, 12, 6], partition_strategy = None):
+def get_t5(model_name, out_dir, knns, partition_strategy = None):
   """get T5 clusters. You need to login and authenticate your account on HuggingFace."""
-
   tokenizer = T5Tokenizer.from_pretrained(model_name)
   raw_wordpieces = tokenizer.sp_model.id_to_piece(list(range(32000)))
   # raw_wordpieces = [t.lower() for t in raw_wordpieces]
@@ -70,9 +76,11 @@ def get_t5(model_name="google-t5/t5-small", out_dir = './', knns = [125, 100, 75
     wordpieces=raw_wordpieces,
     knns=knns,
     output_file_path=output_file_path,
+    partition_strategy=partition_strategy,
   )
 
-def get_mt5(model_name="google/mt5-small", out_dir = './' , knns = [125, 100, 75, 50, 25, 12, 6]):
+# def get_mt5(model_name="google/mt5-small", out_dir = './' , knns = [125, 100, 75, 50, 25, 12, 6], partition_strategy = None):
+def get_mt5(model_name, out_dir, knns, partition_strategy = None):
   """get T5 clusters. You need to login and authenticate your account on HuggingFace."""
   tokenizer = T5Tokenizer.from_pretrained(model_name)
   raw_wordpieces = tokenizer.sp_model.id_to_piece(list(range(32000)))
@@ -88,15 +96,21 @@ def get_mt5(model_name="google/mt5-small", out_dir = './' , knns = [125, 100, 75
     wordpieces=raw_wordpieces,
     knns=knns,
     output_file_path=output_file_path,
+    partition_strategy=partition_strategy,
   )
 
 
-def get_albert(model_name = 'albert-xxlarge-v2', out_dir = './' ,knns = [125, 100, 75, 50, 25, 12, 6]):
+# def get_albert(model_name = 'albert-xxlarge-v2', out_dir = './' ,knns = [125, 100, 75, 50, 25, 12, 6], partition_strategy = None):
+def get_albert(model_name, out_dir, knns, partition_strategy = None, is_input_layer = True):
   """get ALBERT clusters. You need to login and authenticate your account on HuggingFace."""
   tokenizer = AlbertTokenizer.from_pretrained(model_name)  # ALBERT-xxlarge
   raw_wordpieces = tokenizer.sp_model.id_to_piece(list(range(0, 30000)))
   model = AlbertModel.from_pretrained(model_name)
-  embeddings = model._modules['embeddings']._modules['word_embeddings'].weight.detach().cpu()
+  if is_input_layer:
+    embeddings = model.embeddings.word_embeddings.weight.detach().cpu()
+  else:
+    embeddings = model.predictions.decoder.weight.detach().cpu()
+
   print('Running the hierarchical cluster for %s tokens for Albert Model...' % embeddings.shape[0])
   output_file_path = os.path.join(out_dir, f'{model_name}_clusters.json')
   if os.path.exists(output_file_path):
@@ -107,10 +121,11 @@ def get_albert(model_name = 'albert-xxlarge-v2', out_dir = './' ,knns = [125, 10
     wordpieces=raw_wordpieces,
     knns=knns,
     output_file_path=output_file_path,
+    partition_strategy=partition_strategy,
   )
 
 
-def get_glove(vocab_list = None, knns = [200, 125, 100, 75, 50, 25, 12, 6]):
+def get_glove(vocab_list, knns, partition_strategy = None):
     """Get Glove clusters. 
     
     Note: to get the values reported in the paper, you need to get the subset of Albert adn Glove tokens.
@@ -132,21 +147,28 @@ def get_glove(vocab_list = None, knns = [200, 125, 100, 75, 50, 25, 12, 6]):
       wordpieces=glove_vocab  if not vocab_list else vocab_list, 
       knns=knns,
       output_file_path='glove_clusters.json',
+    partition_strategy=partition_strategy,
     )
 
 
 def main():
   args = parser.parse_args()
+  print(f'Running for ({args.model.lower()}) model, using ({str(args.partition_strategy)}) partition strategy...')
+  knns = [125, 100, 75, 50, 25, 12, 6]
+  model_name=args.model.lower()
+  out_dir=args.output_dir
+  partition_strategy=args.partition_strategy
+  is_input_layer = args.is_input_layer
   if 'gemma' in args.model.lower():
     # TODO: change it work word for separate binary.
     notebook_login()
-    get_Gemma(args.model.lower(), args.output_dir)
+    get_Gemma(model_name, out_dir, knns, partition_strategy)
   elif 'albert' in args.model.lower():
-    get_albert(args.model.lower(), args.output_dir)
+    get_albert(model_name, out_dir, knns, partition_strategy, is_input_layer)
   elif 't5' in args.model.lower():
-    get_t5(args.model.lower(), args.output_dir)
+    get_t5(model_name, out_dir, knns, partition_strategy)
   elif 'mt5' in args.model.lower():
-    get_mt5(args.model.lower(), args.output_dir)
+    get_mt5(model_name, out_dir, knns, partition_strategy)
   elif args.model.lower() == 'glove':
     vocab_list = []
     # # This is to get the clusters for the intersection of glove and ALBERT.

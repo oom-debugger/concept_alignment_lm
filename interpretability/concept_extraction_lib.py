@@ -123,14 +123,14 @@ def get_pieces_from_ids(ids, complete_subset, remove_prefix=False):
   return pieces
 
 
-def cluster_and_store(embeddings, wordpieces, knns, output_file_path):
+def cluster_and_store(embeddings, wordpieces, knns, output_file_path, partition_strategy):
   """cluster and store the embeddings. 
   
   Note: the embedding index should map to wordpieces index.
   """
   rids = list(range(0, len(wordpieces)))
   child_knns = knns # [125, 100, 75, 50, 25, 12, 6]
-  root = Node(rids, child_knns[0], uid='0')
+  root = Node(rids, child_knns[0], uid='0', part_strats=partition_strategy)
   dfs_partitioning(root, child_knns[1:], embeddings)
   grouped = bfs_group_by_knn(root)
   # serialize and store.
