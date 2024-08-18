@@ -57,7 +57,6 @@ def get_max_scores(src_cluster_map, dest_cluster_map, dest_token_map):
   return precisions, f_scores
       
 
-
 def get_mapping_score(
     src_cluster_map, dest_token_map, dest_cluster_map, threshold):
   p_scores = []

@@ -4,18 +4,24 @@
 """
 import os
 import copy
+import warnings 
+
 import torch.nn
+from transformers import  AlbertTokenizer, AlbertModel, AutoModelForCausalLM
+from transformers import AutoTokenizer 
+from transformers import MT5Model, T5Tokenizer, T5Tokenizer, T5EncoderModel
+from huggingface_hub import notebook_login
 # from torchtext.vocab import GloVe, vocab
 from concept_extraction_lib import cluster_and_store
 
-from transformers import T5Tokenizer, T5EncoderModel, AlbertTokenizer, AlbertModel, AutoModelForCausalLM
-from transformers import AutoTokenizer 
-from transformers import MT5Model, T5Tokenizer
-from huggingface_hub import notebook_login
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-model", "--model", dest = "model", default = "albert-xxlarge-v2", help="model name")
 parser.add_argument("-output_dir", "--output_dir", dest = "output_dir", default = None, required=True, help="output path for the cluster file.")
+
+
+# Settings the warnings to be ignored 
+warnings.filterwarnings('ignore') 
 
 # def get_hg_sp_model(model_name, knns = [125, 100, 75, 50, 25, 12, 6]):
 #   """get Gemma clusters. You need to login and authenticate your account on HuggingFace."""
