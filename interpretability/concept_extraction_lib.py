@@ -56,6 +56,8 @@ class Node:
         self.strats = 'run_louvain'
       # else: #  self.knn >= 70:
       #   self.strats = 'run_girwan'
+    elif not (part_strats == 'run_leiden' or part_strats == 'run_louvain'):
+      raise ValueError(f'Partitioning strategy is not valid. Given: {part_strats}')
     self.node_paritions = [] #  list[Node] = []
 
   def add_child(self, node):
