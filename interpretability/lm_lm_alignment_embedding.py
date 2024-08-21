@@ -13,7 +13,7 @@ from torchmetrics.functional import spearman_corrcoef
 from torchmetrics.functional.pairwise import pairwise_cosine_similarity
 
 from transformers import AutoTokenizer
-from transformers import AlbertForMaskedLM, T5ForConditionalGeneration
+from transformers import AlbertForMaskedLM, T5ForConditionalGeneration, AutoModelForCausalLM
 
 
 import argparse
@@ -51,6 +51,7 @@ def calculate_embedding_score(embedding_pool, metric='cosine'):
     return torch.cdist(embedding_pool, embedding_pool)
 
 
+
 def get_embedding_pool(token_ids, model_name):
   if 't5' in model_name.lower():
     model = T5ForConditionalGeneration.from_pretrained(model_name)
@@ -58,6 +59,10 @@ def get_embedding_pool(token_ids, model_name):
   elif 'albert' in model_name.lower():
     model = AlbertForMaskedLM.from_pretrained(model_name)
     embeddings = model.albert.embeddings.word_embeddings.weight.detach().cpu()
+  elif 'gemma' in model_name.lower():
+    # "google/gemma-2b"
+    model = AutoModelForCausalLM.from_pretrained(model_name)
+    embeddings = model.model.embed_tokens.weight.detach().cpu()
   else:
     raise ValueError(f'{model_name} not supported!')
   return embeddings[token_ids, :]
@@ -111,7 +116,7 @@ def calculated_top_k_scores(
 
 def main():
   args = parser.parse_args()
-  calculated_global_scores(
+  calculated_top_k_scores(
     model_name_1=args.src_model_name, 
     model_name_2=args.dst_model_name,  
     whitespace_1=args.src_whitespace_char, 
