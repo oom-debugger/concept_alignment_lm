@@ -111,7 +111,7 @@ def calculated_top_k_scores(
 
 def main():
   args = parser.parse_args()
-  scores_1, scores_2 = calculated_global_scores(
+  calculated_global_scores(
     model_name_1=args.src_model_name, 
     model_name_2=args.dst_model_name,  
     whitespace_1=args.src_whitespace_char, 
