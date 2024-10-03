@@ -10,6 +10,7 @@ import torch.nn
 from transformers import  AlbertTokenizer, AlbertModel, AutoModelForCausalLM
 from transformers import AutoTokenizer 
 from transformers import MT5Model, T5Tokenizer, T5Tokenizer, T5EncoderModel
+from transformers import AutoTokenizer, LlamaForCausalLM
 from huggingface_hub import notebook_login
 # from torchtext.vocab import GloVe, vocab
 from concept_extraction_lib import cluster_and_store
@@ -34,6 +35,30 @@ warnings.filterwarnings('ignore')
 #   vocab_size = len(tokenizer.get_vocab().values())
 #   raw_wordpieces = tokenizer.convert_ids_to_tokens(list(range(vocab_size)))
 #   model = AutoModel.from_pretrained(model_name)
+
+
+def get_llama(model_name, out_dir, knns, partition_strategy = None):
+  """get LLAMA clusters. You need to login and authenticate your account on HuggingFace."""
+  # model_name  = "meta-llama/Llama-3.2-3B"
+  # note that the whitespace token in LLAMA is 'Ġ'.
+  tokenizer = AutoTokenizer.from_pretrained(model_name)
+  raw_wordpieces = []
+  for i in range(len(tokenizer.vocab.values())):
+    raw_wordpieces.append(tokenizer._convert_id_to_token(i))
+  model = LlamaForCausalLM.from_pretrained(model_name)
+  llama_embeddings = copy.deepcopy(model.model.embed_tokens.weight.detach().cpu())
+  print('Running the hierarchical cluster for %s tokens for Gemma Model...' % llama_embeddings.shape[0])
+  output_file_path = os.path.join(out_dir, f'{model_name}_clusters.json')
+  if os.path.exists(output_file_path):
+      raise ValueError('Cannot overwrite the output dataset!')
+  os.makedirs(out_dir, mode = 0o777, exist_ok = True) 
+  cluster_and_store(
+    embeddings=llama_embeddings, 
+    wordpieces=raw_wordpieces,
+    knns=knns,
+    output_file_path=output_file_path,
+    partition_strategy=partition_strategy,
+  )
 
 
 # def get_Gemma(model_name="google/gemma-2b", out_dir = './' , knns = [125, 100, 75, 50, 25, 12, 6], partition_strategy = None):
@@ -163,6 +188,9 @@ def main():
     # TODO: change it work word for separate binary.
     notebook_login()
     get_Gemma(model_name, out_dir, knns, partition_strategy)
+  elif 'llama' in args.model.lower():
+    notebook_login()
+    get_llama(model_name, out_dir, knns, partition_strategy)
   elif 'albert' in args.model.lower():
     get_albert(model_name, out_dir, knns, partition_strategy, is_input_layer)
   elif 't5' in args.model.lower():
