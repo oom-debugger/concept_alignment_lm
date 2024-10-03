@@ -46,7 +46,7 @@ def get_shared_vocab(vocab_1, vocab_2, whitespace_1, whitespace_2, keep_only_whi
 
 def calculate_embedding_score(embedding_pool, metric='cosine'):
   if metric == 'cosine':
-    return pairwise_cosine_similarity(embedding_pool, zero_diagonal=False)
+    return pairwise_cosine_similarity(embedding_pool, zero_diagonal=True)
   elif metric == 'miskowski':
     return torch.cdist(embedding_pool, embedding_pool)
 
@@ -79,7 +79,7 @@ def get_sorted(distance, metric = 'cosine'):
   return torch.argsort(distance, dim=-1, stable=True, descending=True if metric == 'cosine' else False)
 
 
-def calculated_global_spearman(scores_1, scores_2, metric = 'cosine'):
+def calculated_global_spearman(scores_1, scores_2):
   res = []
   for i in range(scores_1.shape[0]):
     res.append(spearman_corrcoef(scores_1[i], scores_2[i]).item())

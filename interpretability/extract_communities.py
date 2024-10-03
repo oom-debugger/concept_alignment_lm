@@ -12,7 +12,7 @@ import torch.nn
 from transformers import  AlbertTokenizer, AlbertModel, AutoModelForCausalLM
 from transformers import AutoTokenizer 
 from transformers import MT5Model, T5Tokenizer, T5Tokenizer, T5EncoderModel
-from transformers import AutoTokenizer, LlamaForCausalLM
+from transformers import LlamaForCausalLM
 from huggingface_hub import login
 # from torchtext.vocab import GloVe, vocab
 from concept_extraction_lib import cluster_and_store
