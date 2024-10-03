@@ -49,7 +49,7 @@ def get_llama(model_name, out_dir, knns, partition_strategy = None):
     raw_wordpieces.append(tokenizer._convert_id_to_token(i))
   model = LlamaForCausalLM.from_pretrained(model_name)
   llama_embeddings = copy.deepcopy(model.model.embed_tokens.weight.detach().cpu())
-  print('Running the hierarchical cluster for %s tokens for Gemma Model...' % llama_embeddings.shape[0])
+  print('Running the hierarchical cluster for %s tokens for llama Model...' % llama_embeddings.shape[0])
   output_file_path = os.path.join(out_dir, f'{model_name}_clusters.json')
   if os.path.exists(output_file_path):
       raise ValueError('Cannot overwrite the output dataset!')
