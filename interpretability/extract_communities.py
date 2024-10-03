@@ -1,6 +1,8 @@
 """ API invocatoins to extract clusters for ALBERT, T5, and GloVE.
 
 >  python3 interpretability/extract_communities.py  --model="albert-xxlarge-v2"  --partition_strategy=run_leiden  --output_dir=/home/mehrdad/clusters
+
+> python3 interpretability/extract_communities.py --model="meta-llama/Llama-3.2-3B"  --output_dir=/home/ugrads/nonmajors/mehrdadk/clusters/Llama-32-3B/1
 """
 import os
 import copy
@@ -155,6 +157,8 @@ def get_glove(vocab_list, knns, partition_strategy = None):
     
     Note: to get the values reported in the paper, you need to get the subset of Albert adn Glove tokens.
     """
+    from torchtext.vocab import GloVe
+
     vec = GloVe()
     # vocab = vocab(vec.stoi)
     glove_vocab = list(vec.stoi.keys())
