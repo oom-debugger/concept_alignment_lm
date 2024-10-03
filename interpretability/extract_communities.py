@@ -13,7 +13,7 @@ from transformers import  AlbertTokenizer, AlbertModel, AutoModelForCausalLM
 from transformers import AutoTokenizer 
 from transformers import MT5Model, T5Tokenizer, T5Tokenizer, T5EncoderModel
 from transformers import AutoTokenizer, LlamaForCausalLM
-from huggingface_hub import notebook_login
+from huggingface_hub import login
 # from torchtext.vocab import GloVe, vocab
 from concept_extraction_lib import cluster_and_store
 
@@ -190,10 +190,10 @@ def main():
   is_input_layer = args.is_input_layer
   if 'gemma' in args.model.lower():
     # TODO: change it work word for separate binary.
-    notebook_login()
+    login()
     get_Gemma(model_name, out_dir, knns, partition_strategy)
   elif 'llama' in args.model.lower():
-    notebook_login()
+    login()
     get_llama(model_name, out_dir, knns, partition_strategy)
   elif 'albert' in args.model.lower():
     get_albert(model_name, out_dir, knns, partition_strategy, is_input_layer)
@@ -209,7 +209,7 @@ def main():
     # vocab_list = list(set([tk.replace('▁', '') for tk in raw_wordpieces]))
     # get_glove()
   else:
-    raise ValueError('Unsupported Model Name. Pick from [Albert, T5, mT5, Gemma]')
+    raise ValueError('Unsupported Model Name. Pick from [Albert, T5, mT5, Gemma, llama]')
 
 
 if __name__ == "__main__":
