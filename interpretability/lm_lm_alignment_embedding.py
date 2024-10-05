@@ -33,8 +33,10 @@ parser.add_argument("-thresholds", "--thresholds", dest = "thresholds", default 
 def get_shared_vocab(vocab_1, vocab_2, whitespace_1, whitespace_2, keep_only_whitespace):
   # 1. replace whitespaces with <sep>
   # 2. lower case all tokens
-  vocab_1 = [v.replace(whitespace_1, '<sep>').lower() for v in vocab_1 if not keep_only_whitespace or v.startswith(whitespace_1)]
-  vocab_2 = [v.replace(whitespace_2, '<sep>').lower() for v in vocab_2 if not keep_only_whitespace or v.startswith(whitespace_2)]
+  # vocab_1 = [v.replace(whitespace_1, '<sep>').lower() for v in vocab_1 if not keep_only_whitespace or v.startswith(whitespace_1)]
+  # vocab_2 = [v.replace(whitespace_2, '<sep>').lower() for v in vocab_2 if not keep_only_whitespace or v.startswith(whitespace_2)]
+  vocab_1 = [v.replace(whitespace_1, '<sep>') for v in vocab_1 if not keep_only_whitespace or v.startswith(whitespace_1)]
+  vocab_2 = [v.replace(whitespace_2, '<sep>') for v in vocab_2 if not keep_only_whitespace or v.startswith(whitespace_2)]
   # 3. get the intersection and then make a list out of it
   shared_vocab = sorted(list(set(vocab_1).intersection(vocab_2)))
   # 4. replace the <sep> with whitespace_1/2
