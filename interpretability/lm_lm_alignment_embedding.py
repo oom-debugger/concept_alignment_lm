@@ -123,9 +123,8 @@ def calculated_top_k_scores(
 
   # scores_l = calculated_global_scores(tokenizer_l, model_name_2, shared_vocab_l, metric=metric)
   scores_l = calculated_cosine_scores_mem_efficient(tokenizer_l, model_name_2, shared_vocab_l, metric=metric, max_k=max_k)
-
-  print ('get second pairwise similarity....')
   sorted_index_l = get_sorted(scores_l, metric=metric, max_k=max_k)
+  print ('get second pairwise similarity....', sorted_index_base.shape)
   # xid = shared_vocab_base.index('▁he')
   # [shared_vocab_base[i] for i in sorted_index_base[xid][:10]]
   for k in k_lst:
