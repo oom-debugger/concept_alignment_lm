@@ -109,16 +109,11 @@ def calculated_top_k_scores(
         whitespace_1, whitespace_2, keep_only_whitespace)
   max_k = max(k_lst)
   score_base = calculated_global_scores(tokenizer_base, model_name_1, shared_vocab_base, metric=metric)
-  print ('get first pairwise similarity....')
-  import psutil
-  process = psutil.Process()
-  print(process.memory_info().rss)  # in bytes 
-  if False:
-    sorted_index_base = get_sorted(score_base, metric=metric, max_k=max_k)
-    
+
+  sorted_index_base = get_sorted(score_base, metric=metric, max_k=max_k)
+  if False:    
     with open('llama-1.json', 'w') as f:
       json.dump(sorted_index_base, f)
-
 
     scores_l = calculated_global_scores(tokenizer_l, model_name_2, shared_vocab_l, metric=metric)
     print ('get second pairwise similarity....')
