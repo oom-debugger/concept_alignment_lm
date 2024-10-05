@@ -103,9 +103,11 @@ def calculated_top_k_scores(
         whitespace_1, whitespace_2, keep_only_whitespace)
   
   score_base = calculated_global_scores(tokenizer_base, model_name_1, shared_vocab_base, metric=metric)
+  print ('get first pairwise similarity....')
   sorted_index_base = get_sorted(score_base, metric=metric)
 
   scores_l = calculated_global_scores(tokenizer_l, model_name_2, shared_vocab_l, metric=metric)
+  print ('get first pairwise similarity....')
   sorted_index_l = get_sorted(scores_l, metric=metric)
   # xid = shared_vocab_base.index('▁he')
   # [shared_vocab_base[i] for i in sorted_index_base[xid][:10]]
