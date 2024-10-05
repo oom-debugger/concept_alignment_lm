@@ -82,8 +82,9 @@ def calculated_global_scores(tokenizer, model_name, shared_vocab, metric):
   return scores
 
 
-def get_sorted(distance, metric = 'cosine'):
-  return torch.argsort(distance, dim=-1, stable=True, descending=True if metric == 'cosine' else False)
+def get_sorted(distance, metric, max_k):
+  sorted_mx = torch.argsort(distance, dim=-1, stable=True, descending=True if metric == 'cosine' else False)
+  return sorted_mx[:,:max_k]
 
 
 def calculated_global_spearman(scores_1, scores_2):
@@ -104,14 +105,14 @@ def calculated_top_k_scores(
     shared_vocab_l) = get_shared_vocab(
         tokenizer_base.get_vocab(), tokenizer_l.get_vocab(), 
         whitespace_1, whitespace_2, keep_only_whitespace)
-  
+  max_k = max(k_lst)
   score_base = calculated_global_scores(tokenizer_base, model_name_1, shared_vocab_base, metric=metric)
   print ('get first pairwise similarity....')
-  sorted_index_base = get_sorted(score_base, metric=metric)
+  sorted_index_base = get_sorted(score_base, metric=metric, max_k=max_k)
 
   scores_l = calculated_global_scores(tokenizer_l, model_name_2, shared_vocab_l, metric=metric)
   print ('get second pairwise similarity....')
-  sorted_index_l = get_sorted(scores_l, metric=metric)
+  sorted_index_l = get_sorted(scores_l, metric=metric, max_k=max_k)
   # xid = shared_vocab_base.index('▁he')
   # [shared_vocab_base[i] for i in sorted_index_base[xid][:10]]
   for k in k_lst:
