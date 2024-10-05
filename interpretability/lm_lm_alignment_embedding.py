@@ -5,16 +5,15 @@
     --src_whitespace_char='▁'  \
     --dst_whitespace_char='▁' 
 """
+import gc
 import numpy as np
 import copy
-import pprint
 import torch
 from torchmetrics.functional import spearman_corrcoef
 from torchmetrics.functional.pairwise import pairwise_cosine_similarity
 
 from transformers import AutoTokenizer
 from transformers import AlbertForMaskedLM, T5ForConditionalGeneration, AutoModelForCausalLM, LlamaForCausalLM
-
 
 import argparse
 
@@ -84,7 +83,10 @@ def calculated_global_scores(tokenizer, model_name, shared_vocab, metric):
 
 def get_sorted(distance, metric, max_k):
   sorted_mx = torch.argsort(distance, dim=-1, stable=True, descending=True if metric == 'cosine' else False)
-  return sorted_mx[:,:max_k]
+  s = copy.deepcopy(sorted_mx[:,:max_k])
+  del sorted_mx
+  gc.collect()
+  return s
 
 
 def calculated_global_spearman(scores_1, scores_2):
