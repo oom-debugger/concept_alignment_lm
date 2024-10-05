@@ -6,6 +6,7 @@
     --dst_whitespace_char='▁' 
 """
 import gc
+import json
 import numpy as np
 import copy
 import torch
@@ -75,7 +76,6 @@ def get_embedding_pool(token_ids, model_name):
 def calculated_global_scores(tokenizer, model_name, shared_vocab, metric):
   ids = tokenizer.convert_tokens_to_ids(shared_vocab)
   embeddings = get_embedding_pool(token_ids=ids, model_name=model_name)
-  print ('....')
   scores = calculate_embedding_score(embeddings, metric=metric)
   del embeddings
   return scores
@@ -111,6 +111,9 @@ def calculated_top_k_scores(
   score_base = calculated_global_scores(tokenizer_base, model_name_1, shared_vocab_base, metric=metric)
   print ('get first pairwise similarity....')
   sorted_index_base = get_sorted(score_base, metric=metric, max_k=max_k)
+  
+  with open('gemma-1.json', 'w') as f:
+    json.dump(sorted_index_base, f)
 
   scores_l = calculated_global_scores(tokenizer_l, model_name_2, shared_vocab_l, metric=metric)
   print ('get second pairwise similarity....')
