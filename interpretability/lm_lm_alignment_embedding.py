@@ -62,11 +62,11 @@ def get_embedding_pool(token_ids, model_name):
   elif 'gemma' in model_name.lower():
     # "google/gemma-2b"
     model = AutoModelForCausalLM.from_pretrained(model_name)
-    embeddings = model.model.embed_tokens.weight.detach().cpu()
+    embeddings = model.model.embed_tokens.weight.detach().cpu().to(torch.float16)
   elif 'llama' in model_name.lower():
-    # "google/gemma-2b"
+    # "llama"
     model = LlamaForCausalLM.from_pretrained(model_name)
-    embeddings = model.model.embed_tokens.weight.detach().cpu()
+    embeddings = model.model.embed_tokens.weight.detach().cpu().to(torch.float16)
   else:
     raise ValueError(f'{model_name} not supported!')
   return embeddings[token_ids, :]
