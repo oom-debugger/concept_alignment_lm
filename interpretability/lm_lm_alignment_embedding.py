@@ -13,7 +13,7 @@ from torchmetrics.functional import spearman_corrcoef
 from torchmetrics.functional.pairwise import pairwise_cosine_similarity
 
 from transformers import AutoTokenizer
-from transformers import AlbertForMaskedLM, T5ForConditionalGeneration, AutoModelForCausalLM
+from transformers import AlbertForMaskedLM, T5ForConditionalGeneration, AutoModelForCausalLM, LlamaForCausalLM
 
 
 import argparse
@@ -62,6 +62,10 @@ def get_embedding_pool(token_ids, model_name):
   elif 'gemma' in model_name.lower():
     # "google/gemma-2b"
     model = AutoModelForCausalLM.from_pretrained(model_name)
+    embeddings = model.model.embed_tokens.weight.detach().cpu()
+  elif 'llama' in model_name.lower():
+    # "google/gemma-2b"
+    model = LlamaForCausalLM.from_pretrained(model_name)
     embeddings = model.model.embed_tokens.weight.detach().cpu()
   else:
     raise ValueError(f'{model_name} not supported!')
