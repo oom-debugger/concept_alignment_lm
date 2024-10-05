@@ -82,11 +82,7 @@ def calculated_global_scores(tokenizer, model_name, shared_vocab, metric):
 
 
 def get_sorted(distance, metric, max_k):
-  sorted_mx = torch.argsort(distance, dim=-1, stable=True, descending=True if metric == 'cosine' else False)
-  s = copy.deepcopy(sorted_mx[:,:max_k])
-  del sorted_mx
-  gc.collect()
-  return s
+  return torch.argsort(distance, dim=-1, stable=True, descending=True if metric == 'cosine' else False)[:,:max_k]
 
 
 def calculated_global_spearman(scores_1, scores_2):
@@ -110,12 +106,16 @@ def calculated_top_k_scores(
   max_k = max(k_lst)
   score_base = calculated_global_scores(tokenizer_base, model_name_1, shared_vocab_base, metric=metric)
   print ('get first pairwise similarity....')
-  sorted_index_base = get_sorted(score_base, metric=metric, max_k=max_k)
-  
-  with open('llama-1.json', 'w') as f:
-    json.dump(sorted_index_base, f)
-
+  import psutil
+  process = psutil.Process()
+  print(process.memory_info().rss)  # in bytes 
   if False:
+    sorted_index_base = get_sorted(score_base, metric=metric, max_k=max_k)
+    
+    with open('llama-1.json', 'w') as f:
+      json.dump(sorted_index_base, f)
+
+
     scores_l = calculated_global_scores(tokenizer_l, model_name_2, shared_vocab_l, metric=metric)
     print ('get second pairwise similarity....')
     sorted_index_l = get_sorted(scores_l, metric=metric, max_k=max_k)
