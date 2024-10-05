@@ -82,7 +82,11 @@ def calculated_global_scores(tokenizer, model_name, shared_vocab, metric):
 
 
 def get_sorted(distance, metric, max_k):
-  return torch.argsort(distance, dim=-1, stable=True, descending=True if metric == 'cosine' else False)[:,:max_k]
+  batch = 30000
+  args_sorted = []
+  for x in range(0, distance.shape[-1], batch):
+    args_sorted.append( torch.argsort(distance, dim=-1, stable=True, descending=True if metric == 'cosine' else False)[:,:max_k])
+  return torch.stack(args_sorted, dim=0)
 
 
 def calculated_global_spearman(scores_1, scores_2):
