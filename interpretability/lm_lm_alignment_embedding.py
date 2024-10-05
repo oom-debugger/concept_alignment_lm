@@ -46,7 +46,7 @@ def get_shared_vocab(vocab_1, vocab_2, whitespace_1, whitespace_2, keep_only_whi
 
 def calculate_embedding_score(embedding_pool, metric='cosine'):
   if metric == 'cosine':
-    return pairwise_cosine_similarity(embedding_pool, zero_diagonal=True)
+    return pairwise_cosine_similarity(embedding_pool, zero_diagonal=True).to(torch.bfloat16)
   elif metric == 'miskowski':
     return torch.cdist(embedding_pool, embedding_pool)
 
