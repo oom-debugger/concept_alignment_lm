@@ -112,20 +112,21 @@ def calculated_top_k_scores(
   print ('get first pairwise similarity....')
   sorted_index_base = get_sorted(score_base, metric=metric, max_k=max_k)
   
-  with open('gemma-1.json', 'w') as f:
+  with open('llama-1.json', 'w') as f:
     json.dump(sorted_index_base, f)
 
-  scores_l = calculated_global_scores(tokenizer_l, model_name_2, shared_vocab_l, metric=metric)
-  print ('get second pairwise similarity....')
-  sorted_index_l = get_sorted(scores_l, metric=metric, max_k=max_k)
-  # xid = shared_vocab_base.index('▁he')
-  # [shared_vocab_base[i] for i in sorted_index_base[xid][:10]]
-  for k in k_lst:
-    accs = []
-    for xid in range(len(shared_vocab_l)):
-      if not keep_only_whitespace or shared_vocab_base[xid].startswith(whitespace_1):
-        accs.append(len(set(sorted_index_l[xid][:k].tolist()).intersection(set(sorted_index_base[xid][:k].tolist()))) / k)
-    print(f'For k:{k} mean acc is:{np.mean(accs)}. Shared vocab size:{len(shared_vocab_l)}')
+  if False:
+    scores_l = calculated_global_scores(tokenizer_l, model_name_2, shared_vocab_l, metric=metric)
+    print ('get second pairwise similarity....')
+    sorted_index_l = get_sorted(scores_l, metric=metric, max_k=max_k)
+    # xid = shared_vocab_base.index('▁he')
+    # [shared_vocab_base[i] for i in sorted_index_base[xid][:10]]
+    for k in k_lst:
+      accs = []
+      for xid in range(len(shared_vocab_l)):
+        if not keep_only_whitespace or shared_vocab_base[xid].startswith(whitespace_1):
+          accs.append(len(set(sorted_index_l[xid][:k].tolist()).intersection(set(sorted_index_base[xid][:k].tolist()))) / k)
+      print(f'For k:{k} mean acc is:{np.mean(accs)}. Shared vocab size:{len(shared_vocab_l)}')
 
 
 
