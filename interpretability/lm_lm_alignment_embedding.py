@@ -5,16 +5,16 @@
     --src_whitespace_char='▁'  \
     --dst_whitespace_char='▁' 
 """
-import gc
-import json
 import numpy as np
 import copy
+import pprint
 import torch
 from torchmetrics.functional import spearman_corrcoef
 from torchmetrics.functional.pairwise import pairwise_cosine_similarity
 
 from transformers import AutoTokenizer
 from transformers import AlbertForMaskedLM, T5ForConditionalGeneration, AutoModelForCausalLM, LlamaForCausalLM
+
 
 import argparse
 
@@ -46,7 +46,7 @@ def get_shared_vocab(vocab_1, vocab_2, whitespace_1, whitespace_2, keep_only_whi
 
 def calculate_embedding_score(embedding_pool, metric='cosine'):
   if metric == 'cosine':
-    return pairwise_cosine_similarity(embedding_pool, zero_diagonal=True).to(torch.bfloat16)
+    return pairwise_cosine_similarity(embedding_pool, zero_diagonal=True)
   elif metric == 'miskowski':
     return torch.cdist(embedding_pool, embedding_pool)
 
@@ -82,11 +82,7 @@ def calculated_global_scores(tokenizer, model_name, shared_vocab, metric):
 
 
 def get_sorted(distance, metric, max_k):
-  batch = 30000
-  args_sorted = []
-  for x in range(0, distance.shape[-1], batch):
-    args_sorted.append( torch.argsort(distance, dim=-1, stable=True, descending=True if metric == 'cosine' else False)[:,:max_k])
-  return torch.stack(args_sorted, dim=0)
+  return torch.argsort(distance, dim=-1, stable=True, descending=True if metric == 'cosine' else False)[:, :max_k]
 
 
 def calculated_global_spearman(scores_1, scores_2):
@@ -109,24 +105,20 @@ def calculated_top_k_scores(
         whitespace_1, whitespace_2, keep_only_whitespace)
   max_k = max(k_lst)
   score_base = calculated_global_scores(tokenizer_base, model_name_1, shared_vocab_base, metric=metric)
-
+  print ('get first pairwise similarity....')
   sorted_index_base = get_sorted(score_base, metric=metric, max_k=max_k)
-  print(sorted_index_base.shape)
-  if False:    
-    with open('llama-1.json', 'w') as f:
-      json.dump(sorted_index_base, f)
 
-    scores_l = calculated_global_scores(tokenizer_l, model_name_2, shared_vocab_l, metric=metric)
-    print ('get second pairwise similarity....')
-    sorted_index_l = get_sorted(scores_l, metric=metric, max_k=max_k)
-    # xid = shared_vocab_base.index('▁he')
-    # [shared_vocab_base[i] for i in sorted_index_base[xid][:10]]
-    for k in k_lst:
-      accs = []
-      for xid in range(len(shared_vocab_l)):
-        if not keep_only_whitespace or shared_vocab_base[xid].startswith(whitespace_1):
-          accs.append(len(set(sorted_index_l[xid][:k].tolist()).intersection(set(sorted_index_base[xid][:k].tolist()))) / k)
-      print(f'For k:{k} mean acc is:{np.mean(accs)}. Shared vocab size:{len(shared_vocab_l)}')
+  scores_l = calculated_global_scores(tokenizer_l, model_name_2, shared_vocab_l, metric=metric)
+  print ('get second pairwise similarity....')
+  sorted_index_l = get_sorted(scores_l, metric=metric, max_k=max_k)
+  # xid = shared_vocab_base.index('▁he')
+  # [shared_vocab_base[i] for i in sorted_index_base[xid][:10]]
+  for k in k_lst:
+    accs = []
+    for xid in range(len(shared_vocab_l)):
+      if not keep_only_whitespace or shared_vocab_base[xid].startswith(whitespace_1):
+        accs.append(len(set(sorted_index_l[xid][:k].tolist()).intersection(set(sorted_index_base[xid][:k].tolist()))) / k)
+    print(f'For k:{k} mean acc is:{np.mean(accs)}. Shared vocab size:{len(shared_vocab_l)}')
 
 
 
