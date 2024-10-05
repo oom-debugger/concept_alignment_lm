@@ -77,6 +77,7 @@ def calculated_global_scores(tokenizer, model_name, shared_vocab, metric):
   ids = tokenizer.convert_tokens_to_ids(shared_vocab)
   embeddings = get_embedding_pool(token_ids=ids, model_name=model_name)
   scores = calculate_embedding_score(embeddings, metric=metric)
+  del embeddings
   return scores
 
 
