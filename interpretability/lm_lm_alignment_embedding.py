@@ -50,7 +50,7 @@ def calculated_cosine_scores_mem_efficient(tokenizer, model_name, shared_vocab, 
   embeddings = get_embedding_pool(token_ids=ids, model_name=model_name)
   assert metric == 'cosine'
   indices = []
-  for id in ids:
+  for id in range(embeddings.shape[0]):
     scores = pairwise_cosine_similarity(embeddings[id].unsqueeze(0), embeddings, zero_diagonal=True)
     top_k = torch.argsort(scores, dim=-1, stable=True, descending=True)[:, :max_k]
     indices.append(top_k)
