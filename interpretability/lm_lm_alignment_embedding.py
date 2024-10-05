@@ -111,6 +111,7 @@ def calculated_top_k_scores(
   score_base = calculated_global_scores(tokenizer_base, model_name_1, shared_vocab_base, metric=metric)
 
   sorted_index_base = get_sorted(score_base, metric=metric, max_k=max_k)
+  print(sorted_index_base.shape)
   if False:    
     with open('llama-1.json', 'w') as f:
       json.dump(sorted_index_base, f)
