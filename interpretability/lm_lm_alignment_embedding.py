@@ -63,7 +63,7 @@ def calculated_cosine_scores_mem_efficient(tokenizer, model_name, shared_vocab, 
   s = torch.concat([s0, s1], dim=0)
   v = torch.concat([v0, v1], dim=0)
   sorted = torch.argsort(v, dim=-1)
-  print(sorted.indices.shape)
+  print(sorted.indices)
   final_sorted = torch.stack([s[i, sorted.indices[i,:max_k]] for i in range(sorted.shape[0])], dim=0)
   # 3. get the top_k for each (as we as their indices)
   # 4. merge the conside similarities as well as 
