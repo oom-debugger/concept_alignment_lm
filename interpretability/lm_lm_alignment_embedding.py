@@ -147,7 +147,7 @@ def calculated_top_k_scores(
     # scores_l = calculated_cosine_scores_mem_efficient(tokenizer_l, model_name_2, shared_vocab_l, metric=metric, max_k=max_k)
     sorted_index_l = get_sorted(scores_l, metric=metric, max_k=max_k)
     print ('get second pairwise similarity....', sorted_index_base.shape)
-  if False
+  if False:
     sorted_index_base = calculated_cosine_scores_mem_efficient(tokenizer_base, model_name_1, shared_vocab_base, metric=metric, max_k=max_k)
     sorted_index_l = calculated_cosine_scores_mem_efficient(tokenizer_l, model_name_2, shared_vocab_l, metric=metric, max_k=max_k)
   # xid = shared_vocab_base.index('▁he')
