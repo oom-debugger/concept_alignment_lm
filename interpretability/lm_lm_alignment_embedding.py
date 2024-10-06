@@ -43,7 +43,7 @@ def get_shared_vocab(vocab_1, vocab_2, whitespace_1, whitespace_2, keep_only_whi
   shared_vocab_1 = [tk.replace('<sep>', whitespace_1) for tk in shared_vocab]
   shared_vocab_2 = [tk.replace('<sep>', whitespace_2) for tk in shared_vocab]
   # 5. get token ids
-  return (shared_vocab_1, shared_vocab_2)
+  return (shared_vocab_1[:10000], shared_vocab_2[:10000])
 
 def calculated_cosine_scores_mem_efficient(tokenizer, model_name, shared_vocab, metric, max_k):
   assert metric == 'cosine'
@@ -137,7 +137,7 @@ def calculated_top_k_scores(
         tokenizer_base.get_vocab(), tokenizer_l.get_vocab(), 
         whitespace_1, whitespace_2, keep_only_whitespace)
   max_k = max(k_lst)
-  if False:
+  if True:
     score_base = calculated_global_scores(tokenizer_base, model_name_1, shared_vocab_base, metric=metric)
     # score_base = calculated_cosine_scores_mem_efficient(tokenizer_base, model_name_1, shared_vocab_base, metric=metric, max_k=max_k)
     sorted_index_base = get_sorted(score_base, metric=metric, max_k=max_k)
@@ -147,9 +147,9 @@ def calculated_top_k_scores(
     # scores_l = calculated_cosine_scores_mem_efficient(tokenizer_l, model_name_2, shared_vocab_l, metric=metric, max_k=max_k)
     sorted_index_l = get_sorted(scores_l, metric=metric, max_k=max_k)
     print ('get second pairwise similarity....', sorted_index_base.shape)
-  
-  sorted_index_base = calculated_cosine_scores_mem_efficient(tokenizer_base, model_name_1, shared_vocab_base, metric=metric, max_k=max_k)
-  sorted_index_l = calculated_cosine_scores_mem_efficient(tokenizer_l, model_name_2, shared_vocab_l, metric=metric, max_k=max_k)
+  if False
+    sorted_index_base = calculated_cosine_scores_mem_efficient(tokenizer_base, model_name_1, shared_vocab_base, metric=metric, max_k=max_k)
+    sorted_index_l = calculated_cosine_scores_mem_efficient(tokenizer_l, model_name_2, shared_vocab_l, metric=metric, max_k=max_k)
   # xid = shared_vocab_base.index('▁he')
   # [shared_vocab_base[i] for i in sorted_index_base[xid][:10]]
   for k in k_lst:
