@@ -61,8 +61,8 @@ def calculated_cosine_scores_mem_efficient(tokenizer, model_name, shared_vocab, 
   v0 = torch.concat((score_00.values, score_01.values), dim=-1)
   v1 = torch.concat((score_10.values, score_11.values), dim=-1)
   print(s0.shape, s1.shape)
-  s = torch.stack([s0, s1], dim=0)
-  v = torch.stack([v0, v1], dim=0)
+  s = torch.concat([s0, s1], dim=0)
+  v = torch.concat([v0, v1], dim=0)
   sorted = torch.argsort(v, dim=-1)
   print(s.shape, v.shape)
   i = 0
