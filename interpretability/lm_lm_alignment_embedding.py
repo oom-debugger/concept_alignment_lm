@@ -52,10 +52,12 @@ def calculated_cosine_scores_mem_efficient(tokenizer, model_name, shared_vocab, 
   # 1. Cut the embeddings into 2 peices, 
   half = embeddings.shape[0] // 2
   # 2. Calculate the cosine similary for each  piece (4 combination)
+  # 3. get the top_k for each (as we as their indices)
   score_00 = pairwise_cosine_similarity(embeddings[:half], embeddings[:half], zero_diagonal=True).topk(max_k)
   score_01 = pairwise_cosine_similarity(embeddings[:half], embeddings[half:], zero_diagonal=True).topk(max_k)
   score_10 = pairwise_cosine_similarity(embeddings[half:], embeddings[:half], zero_diagonal=True).topk(max_k)
   score_11 = pairwise_cosine_similarity(embeddings[half:], embeddings[half:], zero_diagonal=True).topk(max_k)
+  # 4. merge the consine similarities as well as 
   s0 = torch.concat((score_00.indices, score_01.indices + len(score_00.indices)), dim=-1)
   s1 = torch.concat((score_10.indices, score_11.indices + len(score_10.indices)), dim=-1)
   v0 = torch.concat((score_00.values, score_01.values), dim=-1)
@@ -63,11 +65,7 @@ def calculated_cosine_scores_mem_efficient(tokenizer, model_name, shared_vocab, 
   s = torch.concat([s0, s1], dim=0)
   v = torch.concat([v0, v1], dim=0)
   sorted_tensor = torch.argsort(v, dim=-1)
-  print(type(v), v.shape, sorted_tensor)
   final_sorted = torch.stack([s[i, sorted_tensor[i,:max_k]] for i in range(sorted_tensor.shape[0])], dim=0)
-  # 3. get the top_k for each (as we as their indices)
-  # 4. merge the conside similarities as well as 
-  print ('got here...')
   return final_sorted
 
   # indices = []
