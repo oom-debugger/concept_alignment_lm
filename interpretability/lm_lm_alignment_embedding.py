@@ -138,15 +138,19 @@ def calculated_top_k_scores(
         tokenizer_base.get_vocab(), tokenizer_l.get_vocab(), 
         whitespace_1, whitespace_2, keep_only_whitespace)
   max_k = max(k_lst)
-  # score_base = calculated_global_scores(tokenizer_base, model_name_1, shared_vocab_base, metric=metric)
-  score_base = calculated_cosine_scores_mem_efficient(tokenizer_base, model_name_1, shared_vocab_base, metric=metric, max_k=max_k)
-  sorted_index_base = get_sorted(score_base, metric=metric, max_k=max_k)
-  print ('get first pairwise similarity....', sorted_index_base.shape)
+  if False:
+    score_base = calculated_global_scores(tokenizer_base, model_name_1, shared_vocab_base, metric=metric)
+    # score_base = calculated_cosine_scores_mem_efficient(tokenizer_base, model_name_1, shared_vocab_base, metric=metric, max_k=max_k)
+    sorted_index_base = get_sorted(score_base, metric=metric, max_k=max_k)
+    print ('get first pairwise similarity....', sorted_index_base.shape)
 
-  # scores_l = calculated_global_scores(tokenizer_l, model_name_2, shared_vocab_l, metric=metric)
-  scores_l = calculated_cosine_scores_mem_efficient(tokenizer_l, model_name_2, shared_vocab_l, metric=metric, max_k=max_k)
-  sorted_index_l = get_sorted(scores_l, metric=metric, max_k=max_k)
-  print ('get second pairwise similarity....', sorted_index_base.shape)
+    scores_l = calculated_global_scores(tokenizer_l, model_name_2, shared_vocab_l, metric=metric)
+    # scores_l = calculated_cosine_scores_mem_efficient(tokenizer_l, model_name_2, shared_vocab_l, metric=metric, max_k=max_k)
+    sorted_index_l = get_sorted(scores_l, metric=metric, max_k=max_k)
+    print ('get second pairwise similarity....', sorted_index_base.shape)
+  
+  sorted_index_base = calculated_cosine_scores_mem_efficient(tokenizer_base, model_name_1, shared_vocab_base, metric=metric, max_k=max_k)
+  sorted_index_l = calculated_cosine_scores_mem_efficient(tokenizer_l, model_name_2, shared_vocab_l, metric=metric, max_k=max_k)
   # xid = shared_vocab_base.index('▁he')
   # [shared_vocab_base[i] for i in sorted_index_base[xid][:10]]
   for k in k_lst:
