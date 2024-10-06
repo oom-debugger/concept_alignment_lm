@@ -43,38 +43,7 @@ def get_shared_vocab(vocab_1, vocab_2, whitespace_1, whitespace_2, keep_only_whi
   shared_vocab_1 = [tk.replace('<sep>', whitespace_1) for tk in shared_vocab]
   shared_vocab_2 = [tk.replace('<sep>', whitespace_2) for tk in shared_vocab]
   # 5. get token ids
-  return (shared_vocab_1[100000:200000], shared_vocab_2[100000:200000])
-
-def calculated_cosine_scores_mem_efficient(tokenizer, model_name, shared_vocab, metric, max_k):
-  assert metric == 'cosine'
-  ids = tokenizer.convert_tokens_to_ids(shared_vocab)
-  embeddings = get_embedding_pool(token_ids=ids, model_name=model_name)
-  # 1. Cut the embeddings into 2 peices, 
-  half = embeddings.shape[0] // 2
-  # 2. Calculate the cosine similary for each  piece (4 combination)
-  # 3. get the top_k for each (as we as their indices)
-  score_00 = pairwise_cosine_similarity(embeddings[:half], embeddings[:half], zero_diagonal=True).topk(max_k)
-  score_01 = pairwise_cosine_similarity(embeddings[:half], embeddings[half:], zero_diagonal=True).topk(max_k)
-  score_10 = pairwise_cosine_similarity(embeddings[half:], embeddings[:half], zero_diagonal=True).topk(max_k)
-  score_11 = pairwise_cosine_similarity(embeddings[half:], embeddings[half:], zero_diagonal=True).topk(max_k)
-  # 4. merge the consine similarities as well as 
-  s0 = torch.concat((score_00.indices, score_01.indices + len(score_00.indices)), dim=-1)
-  s1 = torch.concat((score_10.indices, score_11.indices + len(score_10.indices)), dim=-1)
-  v0 = torch.concat((score_00.values, score_01.values), dim=-1)
-  v1 = torch.concat((score_10.values, score_11.values), dim=-1)
-  s = torch.concat([s0, s1], dim=0)
-  v = torch.concat([v0, v1], dim=0)
-  sorted_tensor = torch.argsort(v, dim=-1)
-  final_sorted = torch.stack([s[i, sorted_tensor[i,:max_k]] for i in range(sorted_tensor.shape[0])], dim=0)
-  return final_sorted
-
-  # indices = []
-  # for id in range(embeddings.shape[0]):
-  #   scores = pairwise_cosine_similarity(embeddings[id].unsqueeze(0), embeddings, zero_diagonal=True)
-  #   top_k = torch.argsort(scores, dim=-1, stable=True, descending=True)[:, :max_k]
-  #   indices.append(top_k)
-  # del embeddings
-  # return torch.stack(indices, dim=0)
+  return (shared_vocab_1[200000:], shared_vocab_2[200000:])
 
 
 def calculate_embedding_score(embedding_pool, metric='cosine'):
@@ -137,21 +106,16 @@ def calculated_top_k_scores(
         tokenizer_base.get_vocab(), tokenizer_l.get_vocab(), 
         whitespace_1, whitespace_2, keep_only_whitespace)
   max_k = max(k_lst)
-  if True:
-    score_base = calculated_global_scores(tokenizer_base, model_name_1, shared_vocab_base, metric=metric)
-    # score_base = calculated_cosine_scores_mem_efficient(tokenizer_base, model_name_1, shared_vocab_base, metric=metric, max_k=max_k)
-    sorted_index_base = get_sorted(score_base, metric=metric, max_k=max_k)
-    print ('get first pairwise similarity....', sorted_index_base.shape)
+  score_base = calculated_global_scores(tokenizer_base, model_name_1, shared_vocab_base, metric=metric)
+  # score_base = calculated_cosine_scores_mem_efficient(tokenizer_base, model_name_1, shared_vocab_base, metric=metric, max_k=max_k)
+  sorted_index_base = get_sorted(score_base, metric=metric, max_k=max_k)
+  print ('get first pairwise similarity....', sorted_index_base.shape)
 
-    scores_l = calculated_global_scores(tokenizer_l, model_name_2, shared_vocab_l, metric=metric)
-    # scores_l = calculated_cosine_scores_mem_efficient(tokenizer_l, model_name_2, shared_vocab_l, metric=metric, max_k=max_k)
-    sorted_index_l = get_sorted(scores_l, metric=metric, max_k=max_k)
-    print ('get second pairwise similarity....', sorted_index_base.shape)
-  if False:
-    sorted_index_base = calculated_cosine_scores_mem_efficient(tokenizer_base, model_name_1, shared_vocab_base, metric=metric, max_k=max_k)
-    sorted_index_l = calculated_cosine_scores_mem_efficient(tokenizer_l, model_name_2, shared_vocab_l, metric=metric, max_k=max_k)
-  # xid = shared_vocab_base.index('▁he')
-  # [shared_vocab_base[i] for i in sorted_index_base[xid][:10]]
+  scores_l = calculated_global_scores(tokenizer_l, model_name_2, shared_vocab_l, metric=metric)
+  # scores_l = calculated_cosine_scores_mem_efficient(tokenizer_l, model_name_2, shared_vocab_l, metric=metric, max_k=max_k)
+  sorted_index_l = get_sorted(scores_l, metric=metric, max_k=max_k)
+  print ('get second pairwise similarity....', sorted_index_base.shape)
+
   for k in k_lst:
     accs = []
     for xid in range(len(shared_vocab_l)):
