@@ -46,16 +46,26 @@ def get_shared_vocab(vocab_1, vocab_2, whitespace_1, whitespace_2, keep_only_whi
   return (shared_vocab_1, shared_vocab_2)
 
 def calculated_cosine_scores_mem_efficient(tokenizer, model_name, shared_vocab, metric, max_k):
+  assert metric == 'cosine'
   ids = tokenizer.convert_tokens_to_ids(shared_vocab)
   embeddings = get_embedding_pool(token_ids=ids, model_name=model_name)
-  assert metric == 'cosine'
-  indices = []
-  for id in range(embeddings.shape[0]):
-    scores = pairwise_cosine_similarity(embeddings[id].unsqueeze(0), embeddings, zero_diagonal=True)
-    top_k = torch.argsort(scores, dim=-1, stable=True, descending=True)[:, :max_k]
-    indices.append(top_k)
-  del embeddings
-  return torch.stack(indices, dim=0)
+  # 1. Cut the embeddings into 2 peices, 
+  half = embeddings.shape[-1] // 2
+  scores = pairwise_cosine_similarity(embeddings[:half], embeddingsembeddings[:half], zero_diagonal=True)
+  # 2. Calculate the cosine similary for each  piece (4 combination)
+
+  # 3. get the top_k for each (as we as their indices)
+  # 4. merge the conside similarities as well as 
+  print ('got here...')
+  return scores
+
+  # indices = []
+  # for id in range(embeddings.shape[0]):
+  #   scores = pairwise_cosine_similarity(embeddings[id].unsqueeze(0), embeddings, zero_diagonal=True)
+  #   top_k = torch.argsort(scores, dim=-1, stable=True, descending=True)[:, :max_k]
+  #   indices.append(top_k)
+  # del embeddings
+  # return torch.stack(indices, dim=0)
 
 
 def calculate_embedding_score(embedding_pool, metric='cosine'):
