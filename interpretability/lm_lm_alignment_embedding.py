@@ -43,7 +43,7 @@ def get_shared_vocab(vocab_1, vocab_2, whitespace_1, whitespace_2, keep_only_whi
   shared_vocab_1 = [tk.replace('<sep>', whitespace_1) for tk in shared_vocab]
   shared_vocab_2 = [tk.replace('<sep>', whitespace_2) for tk in shared_vocab]
   # 5. get token ids
-  return (shared_vocab_1[:100000], shared_vocab_2[:100000])
+  return (shared_vocab_1[100000:200000], shared_vocab_2[100000:200000])
 
 def calculated_cosine_scores_mem_efficient(tokenizer, model_name, shared_vocab, metric, max_k):
   assert metric == 'cosine'
