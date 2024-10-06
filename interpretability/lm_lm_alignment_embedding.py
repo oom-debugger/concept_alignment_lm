@@ -58,6 +58,7 @@ def calculated_cosine_scores_mem_efficient(tokenizer, model_name, shared_vocab, 
   v0 = torch.concat((score_00.indices, score_01.indices), dim=-1)
   score_10 = pairwise_cosine_similarity(embeddings[half:], embeddings[:half], zero_diagonal=True).topk(max_k)
   score_11 = pairwise_cosine_similarity(embeddings[half:], embeddings[half:], zero_diagonal=True).topk(max_k)
+  print(score_10.indices.shape, score_11.indices.shape)
   s1 = torch.concat((score_10.indices, score_11.indices + len(score_11.indices)), dim=-1)
   v1 = torch.concat((score_10.indices, score_11.indices), dim=-1)
   s = torch.stack([s0, s1], dim=0)
