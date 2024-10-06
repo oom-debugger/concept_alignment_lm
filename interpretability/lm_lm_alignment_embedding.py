@@ -51,7 +51,7 @@ def calculated_cosine_scores_mem_efficient(tokenizer, model_name, shared_vocab, 
   embeddings = get_embedding_pool(token_ids=ids, model_name=model_name)
   # 1. Cut the embeddings into 2 peices, 
   half = embeddings.shape[-1] // 2
-  scores = pairwise_cosine_similarity(embeddings[:half], embeddingsembeddings[:half], zero_diagonal=True)
+  scores = pairwise_cosine_similarity(embeddings[:half], embeddings[:half], zero_diagonal=True)
   # 2. Calculate the cosine similary for each  piece (4 combination)
 
   # 3. get the top_k for each (as we as their indices)
