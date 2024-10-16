@@ -44,8 +44,8 @@
     --layer_names=6,12,25  \
     --model='meta-llama/Llama-3.1-70B'
 
-### Gaussian sampling based embeddings
->  python3 gaussian_embeddings_update.py
+### Gaussian sampling based embeddings:
+>  python3 gaussian_embeddings_update.py \
     --token_file_path /path/to/tokens_from_a_cluster_file.txt \
     --model_name path_to_model \
     --output_model_path /path/to/output_model \
