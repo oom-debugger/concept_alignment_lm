@@ -3,7 +3,7 @@
 >  python3 interpretability/extract_communities.py  --model="albert-xxlarge-v2"  --partition_strategy=run_leiden  --output_dir=/home/mehrdad/clusters
 
 > python3 interpretability/extract_communities.py --model="meta-llama/Llama-3.1-70B" \
-    --output_dir=/home/ugrads/nonmajors/mehrdadk/clusters/
+    --output_dir=<you dir>
 """
 import os
 import copy
