@@ -1,104 +1,86 @@
 import torch
 from transformers import T5Tokenizer, T5ForConditionalGeneration
-
-# Load the T5 model and tokenizer. Alternatively, change the tokenizers, models and import appropriate libraies for other models
-model_name = ""  
-tokenizer = T5Tokenizer.from_pretrained(model_name)
-model = T5ForConditionalGeneration.from_pretrained(model_name)
 import ast
+import argparse
+from huggingface_hub import HfApi, login
 
-# Specify the path to your file
-file_path = 'path/to/your/file.txt'
+def load_tokens(file_path):
+    with open(file_path, 'r') as file:
+        file_contents = file.read().strip()
+    return ast.literal_eval(file_contents)
 
-# Read the contents of the file
-with open(file_path, 'r') as file:
-    file_contents = file.read().strip()
-
-# Use ast.literal_eval to safely evaluate the string as a Python expression
-tokens_1 = ast.literal_eval(file_contents)
-
-# Print the list to verify
-print(tokens_1)
-# Function to get the embedding of a single token
-def get_embedding(token):
+def get_embedding(token, tokenizer, model):
     token_id = tokenizer.convert_tokens_to_ids(token)
     embedding = model.shared.weight[token_id, :]
     return embedding
 
-# Calculate the norm for each vector and average the norms (magnitude U)
 def calculate_average_norm(embeddings):
-    norms = torch.norm(embeddings, dim=1)  # Norm (L2 norm) for each vector
-    return torch.mean(norms)  # Average norm
+    norms = torch.norm(embeddings, dim=1)
+    return torch.mean(norms)
 
-# Scale the average embedding to have magnitude U
 def scale_to_magnitude(average_embedding, U):
     average_embedding_norm = torch.norm(average_embedding)
     scaled_embedding = average_embedding * (U / average_embedding_norm)
     return scaled_embedding
 
-# Function to replace the embeddings with the new generated embeddings
-def assign_generated_embeddings(tokens):
-    # Get original embeddings for all tokens
-    embeddings = torch.stack([get_embedding(token) for token in tokens])
-
-    # Calculate U (average of norms)
+def assign_generated_embeddings(tokens, tokenizer, model):
+    embeddings = torch.stack([get_embedding(token, tokenizer, model) for token in tokens])
     U = calculate_average_norm(embeddings)
-
-    # Calculate the average embedding (mu)
-    mu = torch.mean(embeddings, dim=0)  # Mean embedding (cluster center)
-    mu = scale_to_magnitude(mu, U)  # Scale mean embedding to magnitude U
-
-    # Calculate standard deviation for the embeddings
+    mu = torch.mean(embeddings, dim=0)
+    mu = scale_to_magnitude(mu, U)
     std = torch.std(embeddings, dim=0)
-
-    # Generate random samples from normal distribution (S_i)
     gaussian_distribution = torch.distributions.Normal(0, std*0.7)  
     S_i = gaussian_distribution.sample()
-
-    # Compute auxiliary vector (aux = mu + S_i)
     aux = mu + S_i
-
-    # Rescale aux to have the same magnitude as U
     aux_norm = torch.norm(aux)
     final_embedding = aux * (U / aux_norm)
-
-    # Replace original embeddings with new generated embeddings
     ids = tokenizer.convert_tokens_to_ids(tokens)
     with torch.no_grad():
         for i, token_id in enumerate(ids):
             model.shared.weight[token_id, :] = final_embedding
-
     return final_embedding
-
 
 def make_tensors_contiguous(model):
     for param in model.parameters():
         if not param.is_contiguous():
             param.data = param.data.contiguous()
 
-# Generate and assign new embeddings to the tokens
-final_embedding = assign_generated_embeddings(tokens_1)
-make_tensors_contiguous(model)
-# Save the updated model and tokenizer
-model.save_pretrained('')
-tokenizer.save_pretrained('')
+def main(token_file_path, model_name, output_model_path, huggingface_token, repo_id):
+    # Load the T5 model and tokenizer
+    tokenizer = T5Tokenizer.from_pretrained(model_name)
+    model = T5ForConditionalGeneration.from_pretrained(model_name)
 
-from huggingface_hub import HfApi, login
+    # Load tokens
+    tokens_1 = load_tokens(token_file_path)
+    print(f"Loaded {len(tokens_1)} tokens")
 
-# Hugging Face token 
-huggingface_token = ""
+    # Generate and assign new embeddings to the tokens
+    final_embedding = assign_generated_embeddings(tokens_1, tokenizer, model)
+    make_tensors_contiguous(model)
 
-# Log in using your token
-login(token=huggingface_token)
+    # Save the updated model and tokenizer
+    model.save_pretrained(output_model_path)
+    tokenizer.save_pretrained(output_model_path)
+    print(f"Updated model saved to {output_model_path}")
 
-# Initialize the API and create a new repository
-api = HfApi()
-repo_url = api.create_repo(repo_id="")
-api.upload_folder(
-    folder_path="",
-    repo_id="",
-    repo_type="model"
-)
+    # Upload to Hugging Face Hub
+    login(token=huggingface_token)
+    api = HfApi()
+    repo_url = api.create_repo(repo_id=repo_id)
+    api.upload_folder(
+        folder_path=output_model_path,
+        repo_id=repo_id,
+        repo_type="model"
+    )
+    print(f"Updated model uploaded successfully to {repo_url}!")
 
-print("Updated model uploaded successfully!")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Update T5 model embeddings and upload to Hugging Face Hub")
+    parser.add_argument("token_file_path", help="Path to the file containing tokens")
+    parser.add_argument("model_name", help="Name or path of the pre-trained model")
+    parser.add_argument("output_model_path", help="Path to save the updated model")
+    parser.add_argument("huggingface_token", help="Hugging Face API token")
+    parser.add_argument("repo_id", help="Repository ID for Hugging Face Hub")
+    args = parser.parse_args()
 
+    main(args.token_file_path, args.model_name, args.output_model_path, args.huggingface_token, args.repo_id)
