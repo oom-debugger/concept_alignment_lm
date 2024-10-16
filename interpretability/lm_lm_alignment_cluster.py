@@ -1,8 +1,8 @@
 """ Add the evaluation for LM-LM alignment.
   
 python3 interpretability/lm_lm_alighment.py  \
-    --src_cluster=/home/mehrdad/clusters/albert-xlarge-v2_clusters.json \
-    --dst_cluster=/home/mehrdad/clusters/albert-xxlarge-v2_clusters.json  \
+    --src_cluster=<your dir>/albert-xlarge-v2_clusters.json \
+    --dst_cluster=<your dir>/albert-xxlarge-v2_clusters.json  \
     --src_whitespace_char='▁'  \
     --dest_whitespace_char='▁' 
 
