@@ -9,15 +9,15 @@
 
 
 > python3 interpretability/location_eval.py \
-    --src_cluster=/home/mehrdad/clusters/albert-xlarge-v2_clusters.json \
+    --src_cluster=<your dir>/albert-xlarge-v2_clusters.json \
     --src_whitespace_char='▁'  \
-    --location_file='/home/mehrdad/git/countries-states-cities-database/json/countries+states+cities.json' \
+    --location_file='<your git dir>/git/countries-states-cities-database/json/countries+states+cities.json' \
     --layer_names=12,25,50,75
 
 > python3 interpretability/location_eval.py \
-    --src_cluster=/home/mehrdad/clusters/llama-3.1-70b_clusters.json \
+    --src_cluster=<your dir>/clusters/llama-3.1-70b_clusters.json \
     --src_whitespace_char='Ġ'  \
-    --location_file='/home/mehrdad/git/countries-states-cities-database/json/countries+states+cities.json' \
+    --location_file='<your git dir>/git/countries-states-cities-database/json/countries+states+cities.json' \
     --layer_names=6,12,25  \
     --model='meta-llama/Llama-3.1-70B'
 """
