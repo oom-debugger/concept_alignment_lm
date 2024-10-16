@@ -22,10 +22,9 @@
     --src_whitespace_char='▁'  \  <br>
     --dst_whitespace_char='▁'  <br>
 
-### Human-LM alignment location:
+### Human-LM alignment:
 
-
-### Locatio eval command examples:
+### Location eval command examples:
 > python3 interpretability/location_eval.py \
     --src_cluster=<your dir>/albert-xlarge-v2_clusters.json \
     --src_whitespace_char='▁'  \
