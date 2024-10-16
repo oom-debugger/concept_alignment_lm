@@ -5,7 +5,7 @@
 !pip -q install names-dataset
 
 > python3 interpretability/name_eval.py \
-    --src_cluster=/home/mehrdad/clusters/llama-3.1-70b_clusters.json \
+    --src_cluster=<your dir>/clusters/llama-3.1-70b_clusters.json \
     --src_whitespace_char='Ġ'  \
     --layer_names=6,12,25  \
     --model='meta-llama/Llama-3.1-70B'
