@@ -16,11 +16,11 @@
 
 ## Evaluation:
 ### LM-LM alignment:
-> python3 interpretability/lm_lm_alignment_embedding.py  \  <br>
-    --src_model_name=albert-xlarge-v2 \  <br>
-    --dst_model_name=albert-base-v2  \  <br>
-    --src_whitespace_char='▁'  \  <br>
-    --dst_whitespace_char='▁'  <br>
+> python3 interpretability/lm_lm_alignment_embedding.py  \
+    --src_model_name=albert-xlarge-v2 \
+    --dst_model_name=albert-base-v2  \
+    --src_whitespace_char='▁'  \
+    --dst_whitespace_char='▁'
 
 ### Human-LM alignment:
 
