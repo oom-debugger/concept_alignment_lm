@@ -1,3 +1,5 @@
+This is a github repository for Concept alignment paper https://arxiv.org/pdf/2406.05315 (it is a WIP)
+
 ## Clustering:
 ### required packages
 !pip install -q networkx  <br>
