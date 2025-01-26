@@ -29,7 +29,7 @@ parser.add_argument("-dst_whitespace_char", "--dst_whitespace_char", dest = "dst
                     help="Source whitespace characters to remove")
 parser.add_argument("-thresholds", "--thresholds", dest = "thresholds", default = '3,5,10,50,100', type=str,
                     help="top-k thresholds for the spearsman correlation evaluation.")
-parser.add_argument("-input_dir", "--input_dir", dest = "input_dir", default = None, required=True, help="input dir for sentences")
+parser.add_argument("-input_dir", "--input_dir", dest = "input_dir", default = None, help="input dir for sentences")
 
 def get_valid_words(input_dir):
     # !wget 'https://zenodo.org/record/5172857/files/wiki_morph.json'
@@ -150,6 +150,7 @@ def calculated_top_k_scores(
     input_dir=None):
   tokenizer_base = AutoTokenizer.from_pretrained(model_name_1)
   tokenizer_l = AutoTokenizer.from_pretrained(model_name_2)
+  input_dir = args.input_dir
   if not input_dir:
       (shared_vocab_base, 
         shared_vocab_l) = get_shared_vocab(
