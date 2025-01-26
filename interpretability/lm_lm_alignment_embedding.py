@@ -7,11 +7,13 @@
 """
 import numpy as np
 import copy
+import json
 import pprint
 import torch
+
+from collections import defaultdict
 from torchmetrics.functional import spearman_corrcoef
 from torchmetrics.functional.pairwise import pairwise_cosine_similarity
-
 from transformers import AutoTokenizer
 from transformers import AlbertForMaskedLM, T5ForConditionalGeneration, AutoModelForCausalLM, LlamaForCausalLM
 
@@ -27,7 +29,53 @@ parser.add_argument("-dst_whitespace_char", "--dst_whitespace_char", dest = "dst
                     help="Source whitespace characters to remove")
 parser.add_argument("-thresholds", "--thresholds", dest = "thresholds", default = '3,5,10,50,100', type=str,
                     help="top-k thresholds for the spearsman correlation evaluation.")
+parser.add_argument("-input_dir", "--input_dir", dest = "input_dir", default = None, required=True, help="input dir for sentences")
 
+def get_valid_words(input_dir):
+    # !wget 'https://zenodo.org/record/5172857/files/wiki_morph.json'
+    # !wget 'https://enroots.neocities.org/families.txt'
+
+    with open('families.txt', 'r') as f:
+        data = f.readlines()
+    # read word families
+    world_families_dict = defaultdict(list)
+    world_families_set = set()
+    for d in data:
+      if d.startswith('\t'):
+        world_families_dict[fam].append(d.strip())
+        world_families_set.add(d.strip())
+      else:
+        fam = d.strip()
+        world_families_set.add(fam)
+    # read Morph Wiki
+    with open('wiki_morph.json', 'r') as f:
+      morph_train_dataset = json.load(f)
+    morph_train_dataset[0]['Word'], morph_train_dataset[0]['PoS']
+    morph_vocab = [v['Word'] for v in morph_train_dataset]
+    word_morph_dict = defaultdict(lambda: defaultdict(list))
+    for entry in morph_train_dataset:
+      word = entry['Word']
+      pos = entry['PoS']
+      word_morph_dict[word][pos].append(entry)
+    morph_vocabs = list(word_morph_dict.keys())
+    return set(morph_vocabs).union(world_families_set)
+    
+def get_shared_word_vocab(vocab_1, vocab_2, whitespace_1, whitespace_2, valid_words):
+  # 1. replace whitespaces with <sep>
+  # 2. lower case all tokens
+  # vocab_1 = [v.replace(whitespace_1, '<sep>').lower() for v in vocab_1 if not keep_only_whitespace or v.startswith(whitespace_1)]
+  # vocab_2 = [v.replace(whitespace_2, '<sep>').lower() for v in vocab_2 if not keep_only_whitespace or v.startswith(whitespace_2)]
+  vocab_1 = [v.replace(whitespace_1, '') for v in vocab_1 if v.startswith(whitespace_1)]
+  vocab_2 = [v.replace(whitespace_2, '') for v in vocab_2 if v.startswith(whitespace_2)]
+  # 3. get the intersection and then make a list out of it
+  shared_vocab = sorted(list(set(vocab_1).intersection(vocab_2)))
+  shared_valid_vocab = list(set(shared_vocab).intersection(valid_words))
+
+  # 4. replace the <sep> with whitespace_1/2
+  shared_vocab_1 = [whitespace_1 + tk for tk in shared_valid_vocab if tk.isalpha()]
+  shared_vocab_2 = [whitespace_2 + tk for tk in shared_valid_vocab if tk.isalpha()]
+  # 5. get token ids
+  return (shared_vocab_1, shared_vocab_2)
 
 
 def get_shared_vocab(vocab_1, vocab_2, whitespace_1, whitespace_2, keep_only_whitespace):
@@ -98,13 +146,22 @@ def calculated_top_k_scores(
     model_name_1, model_name_2,
     whitespace_1, whitespace_2,
     keep_only_whitespace,
-    k_lst, metric='cosine'):
+    k_lst, metric='cosine',
+    input_dir=None):
   tokenizer_base = AutoTokenizer.from_pretrained(model_name_1)
   tokenizer_l = AutoTokenizer.from_pretrained(model_name_2)
-  (shared_vocab_base, 
-    shared_vocab_l) = get_shared_vocab(
-        tokenizer_base.get_vocab(), tokenizer_l.get_vocab(), 
-        whitespace_1, whitespace_2, keep_only_whitespace)
+  if not input_dir:
+      (shared_vocab_base, 
+        shared_vocab_l) = get_shared_vocab(
+            tokenizer_base.get_vocab(), tokenizer_l.get_vocab(), 
+            whitespace_1, whitespace_2, keep_only_whitespace)
+  else:
+      (shared_vocab_base, 
+        shared_vocab_l) = get_shared_vocab(
+            tokenizer_base.get_vocab(), tokenizer_l.get_vocab(), 
+            whitespace_1, whitespace_2,
+            valid_words=get_valid_words(input_dir),
+        )
   max_k = max(k_lst)
   score_base = calculated_global_scores(tokenizer_base, model_name_1, shared_vocab_base, metric=metric)
   # score_base = calculated_cosine_scores_mem_efficient(tokenizer_base, model_name_1, shared_vocab_base, metric=metric, max_k=max_k)
