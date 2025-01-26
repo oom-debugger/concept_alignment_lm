@@ -35,7 +35,7 @@ def get_valid_words(input_dir):
     # !wget 'https://zenodo.org/record/5172857/files/wiki_morph.json'
     # !wget 'https://enroots.neocities.org/families.txt'
 
-    with open('families.txt', 'r') as f:
+    with open(os.path.join(directory, 'families.txt'), 'r') as f:
         data = f.readlines()
     # read word families
     world_families_dict = defaultdict(list)
@@ -48,7 +48,7 @@ def get_valid_words(input_dir):
         fam = d.strip()
         world_families_set.add(fam)
     # read Morph Wiki
-    with open('wiki_morph.json', 'r') as f:
+    with open(os.path.join(directory, 'wiki_morph.json'), 'r') as f:
       morph_train_dataset = json.load(f)
     morph_train_dataset[0]['Word'], morph_train_dataset[0]['PoS']
     morph_vocab = [v['Word'] for v in morph_train_dataset]
