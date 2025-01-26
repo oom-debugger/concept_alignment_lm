@@ -158,7 +158,7 @@ def calculated_top_k_scores(
             whitespace_1, whitespace_2, keep_only_whitespace)
   else:
       (shared_vocab_base, 
-        shared_vocab_l) = get_shared_vocab(
+        shared_vocab_l) = get_shared_word_vocab(
             tokenizer_base.get_vocab(), tokenizer_l.get_vocab(), 
             whitespace_1, whitespace_2,
             valid_words=get_valid_words(input_dir),
