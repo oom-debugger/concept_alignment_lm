@@ -150,7 +150,6 @@ def calculated_top_k_scores(
     input_dir=None):
   tokenizer_base = AutoTokenizer.from_pretrained(model_name_1)
   tokenizer_l = AutoTokenizer.from_pretrained(model_name_2)
-  input_dir = args.input_dir
   if not input_dir:
       (shared_vocab_base, 
         shared_vocab_l) = get_shared_vocab(
@@ -193,6 +192,7 @@ def main():
     keep_only_whitespace=False,
     metric='cosine',
     k_lst=[int(k) for k in args.thresholds.split(',')],
+    input_dir=args.input_dir,
     )
 
 
