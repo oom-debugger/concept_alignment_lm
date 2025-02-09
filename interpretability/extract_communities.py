@@ -162,7 +162,7 @@ def get_albert(model_name, out_dir, knns, partition_strategy = None, is_input_la
 def get_contextual(input_dir, out_dir, knns, partition_strategy = None):
   """Given a list of infered embeddings cluster them"""
   # _ = AutoTokenizer.from_pretrained(model_name)
-  state_dict = torch.load(open(os.path.join(input_dir, 'merged_data.pt')))
+  state_dict = torch.load(os.path.join(input_dir, 'merged_data.pt'))
   # discarding 'sigma'
   embeddings = state_dict['mean']
   with open(os.path.join(input_dir, 'merged_names.json'), 'r') as f:
