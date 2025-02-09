@@ -237,7 +237,7 @@ def main():
     # raw_wordpieces = tokenizer.sp_model.id_to_piece(list(range(0, 29999)))
     # vocab_list = list(set([tk.replace('▁', '') for tk in raw_wordpieces]))
     # get_glove()
-  elif args.model.lower() is None:
+  elif args.model is None:
      if not args.input_dir:
         raise ValueError('for contextual clustering, an input directory containing embedding and tokens are needed.')
      get_contextual(args.input_dir, out_dir, knns, partition_strategy = None)
