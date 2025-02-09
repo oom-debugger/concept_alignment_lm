@@ -26,7 +26,7 @@ from concept_extraction_lib import cluster_and_store
 
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument("-model", "--model", dest = "model", default = "albert-xxlarge-v2", help="model name")
+parser.add_argument("-model", "--model", dest = "model", default = None, help="model name")
 parser.add_argument("-output_dir", "--output_dir", dest = "output_dir", default = None, required=True, help="output path for the cluster file.")
 parser.add_argument("-input_dir", "--input_dir", dest = "input_dir", default = None, help="input path for the contextual embeddings.")
 parser.add_argument("-partition_strategy", "--partition_strategy", dest = "partition_strategy", default = None, choices=['run_leiden', 'run_louvain'], 
@@ -237,7 +237,7 @@ def main():
     # raw_wordpieces = tokenizer.sp_model.id_to_piece(list(range(0, 29999)))
     # vocab_list = list(set([tk.replace('▁', '') for tk in raw_wordpieces]))
     # get_glove()
-  elif args.model.lower() == 'contextual':
+  elif args.model.lower() is None:
      if not args.input_dir:
         raise ValueError('for contextual clustering, an input directory containing embedding and tokens are needed.')
      get_contextual(args.input_dir, out_dir, knns, partition_strategy = None)
