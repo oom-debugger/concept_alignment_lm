@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-model", "--model", dest = "model", default = None, help="model name")
 parser.add_argument("-output_dir", "--output_dir", dest = "output_dir", default = None, required=True, help="output path for the cluster file.")
 parser.add_argument("-input_dir", "--input_dir", dest = "input_dir", default = None, help="input path for the contextual embeddings.")
-parser.add_argument("-partition_strategy", "--partition_strategy", dest = "partition_strategy", default = None, choices=['run_leiden', 'run_louvain'], 
+parser.add_argument("-partition_strategy", "--partition_strategy", dest = "partition_strategy", default = 'run_louvain', choices=['run_leiden', 'run_louvain'], 
                     help="partitioning strategy. Select between Louvain and Leiden.")
 parser.add_argument("-is_input_layer", "--is_input_layer", dest = "is_input_layer", default = True, type=bool, 
                     help="if set uses input embedding layer to cluster tokens, otherwise uses the decoder layer.")
@@ -168,7 +168,7 @@ def get_contextual(input_dir, out_dir, knns, partition_strategy = None):
   with open(os.path.join(input_dir, 'merged_names.json'), 'r') as f:
     data = json.load(f)
     raw_wordpieces = [d.split(' : ')[0] for d in data]
-  print('Running the hierarchical cluster for %s tokens for Albert Model...' % embeddings.shape[0])
+  print('Running the hierarchical cluster for %s tokens for custom embedding file...' % embeddings.shape[0])
   output_file_path = os.path.join(out_dir, f'mean_contextual_clusters.json')
   if os.path.exists(output_file_path):
       raise ValueError('Cannot overwrite the output dataset!')
