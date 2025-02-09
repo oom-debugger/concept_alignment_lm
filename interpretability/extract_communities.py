@@ -165,7 +165,7 @@ def get_contextual(input_dir, out_dir, knns, partition_strategy = None):
   state_dict = torch.load(open(os.path.join(input_dir, 'merged_data.pt')))
   # discarding 'sigma'
   embeddings = state_dict['mean']
-  with open(os.path.join(input_dir, 'merged_data.pt'), 'r') as f:
+  with open(os.path.join(input_dir, 'merged_data.json'), 'r') as f:
     data = json.load(f)
     raw_wordpieces = [d.split(' : ')[0] for d in data]
   print('Running the hierarchical cluster for %s tokens for Albert Model...' % embeddings.shape[0])
