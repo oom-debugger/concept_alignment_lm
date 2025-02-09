@@ -211,7 +211,8 @@ def get_glove(vocab_list, knns, partition_strategy = None):
 
 def main():
   args = parser.parse_args()
-  print(f'Running for ({args.model.lower()}) model, using ({str(args.partition_strategy)}) partition strategy...')
+  if args.model is not None:
+    print(f'Running for ({args.model.lower()}) model, using ({str(args.partition_strategy)}) partition strategy...')
   knns = [125, 100, 75, 50, 25, 12, 6]
   model_name=args.model.lower()
   out_dir=args.output_dir
@@ -240,6 +241,7 @@ def main():
   elif args.model is None:
      if not args.input_dir:
         raise ValueError('for contextual clustering, an input directory containing embedding and tokens are needed.')
+     print('running cluster on an input embedding file')
      get_contextual(args.input_dir, out_dir, knns, partition_strategy = None)
   else:
     raise ValueError('Unsupported Model Name. Pick from [Albert, T5, mT5, Gemma, llama]')
