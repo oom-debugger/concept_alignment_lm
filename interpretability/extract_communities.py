@@ -4,10 +4,15 @@
 
 > python3 interpretability/extract_communities.py --model="meta-llama/Llama-3.1-70B" \
     --output_dir=<you dir>
+
+> python3 interpretability/extract_communities.py \
+    --output_dir=/home/ugrads/nonmajors/mehrdadk/experiments/contextual_clusters \
+    --input_dir=/home/ugrads/nonmajors/mehrdadk/experiments/aggregated_embeddings
 """
 import os
 import copy
 import json
+import torch
 import warnings 
 
 import torch.nn
