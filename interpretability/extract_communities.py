@@ -211,37 +211,35 @@ def get_glove(vocab_list, knns, partition_strategy = None):
 
 def main():
   args = parser.parse_args()
-  if args.model is not None:
-    print(f'Running for ({args.model.lower()}) model, using ({str(args.partition_strategy)}) partition strategy...')
   knns = [125, 100, 75, 50, 25, 12, 6]
-  model_name=args.model.lower()
+  model_name=args.model.lower() if args.model is not None else 'contextual'
+  print(f'Running for ({model_name.lower()}) model, using ({str(args.partition_strategy)}) partition strategy...')
   out_dir=args.output_dir
   partition_strategy=args.partition_strategy
   is_input_layer = args.is_input_layer
-  if 'gemma' in args.model.lower():
+  if 'gemma' in model_name:
     # TODO: change it work word for separate binary.
     login()
     get_Gemma(model_name, out_dir, knns, partition_strategy)
-  elif 'llama' in args.model.lower():
+  elif 'llama' in model_name:
     login()
     get_llama(model_name, out_dir, knns, partition_strategy)
-  elif 'albert' in args.model.lower():
+  elif 'albert' in model_name:
     get_albert(model_name, out_dir, knns, partition_strategy, is_input_layer)
-  elif 't5' in args.model.lower():
+  elif 't5' in model_name:
     get_t5(model_name, out_dir, knns, partition_strategy)
-  elif 'mt5' in args.model.lower():
+  elif 'mt5' in model_name:
     get_mt5(model_name, out_dir, knns, partition_strategy)
-  elif args.model.lower() == 'glove':
+  elif model_name == 'glove':
     vocab_list = []
     # # This is to get the clusters for the intersection of glove and ALBERT.
     # tokenizer = AlbertTokenizer.from_pretrained('albert-base-v2')
     # raw_wordpieces = tokenizer.sp_model.id_to_piece(list(range(0, 29999)))
     # vocab_list = list(set([tk.replace('▁', '') for tk in raw_wordpieces]))
     # get_glove()
-  elif args.model is None:
+  elif model_name == 'contextual':
      if not args.input_dir:
         raise ValueError('for contextual clustering, an input directory containing embedding and tokens are needed.')
-     print('running cluster on an input embedding file')
      get_contextual(args.input_dir, out_dir, knns, partition_strategy = None)
   else:
     raise ValueError('Unsupported Model Name. Pick from [Albert, T5, mT5, Gemma, llama]')
