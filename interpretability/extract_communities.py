@@ -28,7 +28,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-model", "--model", dest = "model", default = "albert-xxlarge-v2", help="model name")
 parser.add_argument("-output_dir", "--output_dir", dest = "output_dir", default = None, required=True, help="output path for the cluster file.")
-parser.add_argument("-input_dir", "--output_dir", dest = "output_dir", default = None, help="input path for the contextual embeddings.")
+parser.add_argument("-input_dir", "--input_dir", dest = "input_dir", default = None, help="input path for the contextual embeddings.")
 parser.add_argument("-partition_strategy", "--partition_strategy", dest = "partition_strategy", default = None, choices=['run_leiden', 'run_louvain'], 
                     help="partitioning strategy. Select between Louvain and Leiden.")
 parser.add_argument("-is_input_layer", "--is_input_layer", dest = "is_input_layer", default = True, type=bool, 
