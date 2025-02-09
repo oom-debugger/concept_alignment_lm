@@ -7,6 +7,7 @@
 """
 import os
 import copy
+import json
 import warnings 
 
 import torch.nn
@@ -22,6 +23,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-model", "--model", dest = "model", default = "albert-xxlarge-v2", help="model name")
 parser.add_argument("-output_dir", "--output_dir", dest = "output_dir", default = None, required=True, help="output path for the cluster file.")
+parser.add_argument("-input_dir", "--output_dir", dest = "output_dir", default = None, help="input path for the contextual embeddings.")
 parser.add_argument("-partition_strategy", "--partition_strategy", dest = "partition_strategy", default = None, choices=['run_leiden', 'run_louvain'], 
                     help="partitioning strategy. Select between Louvain and Leiden.")
 parser.add_argument("-is_input_layer", "--is_input_layer", dest = "is_input_layer", default = True, type=bool, 
@@ -152,6 +154,27 @@ def get_albert(model_name, out_dir, knns, partition_strategy = None, is_input_la
     partition_strategy=partition_strategy,
   )
 
+def get_contextual(input_dir, out_dir, knns, partition_strategy = None):
+  """Given a list of infered embeddings cluster them"""
+  # _ = AutoTokenizer.from_pretrained(model_name)
+  state_dict = torch.load(open(os.path.join(input_dir, 'merged_data.pt')))
+  # discarding 'sigma'
+  embeddings = state_dict['mean']
+  with open(os.path.join(input_dir, 'merged_data.pt'), 'r') as f:
+    data = json.load(f)
+    raw_wordpieces = [d.split(' : ')[0] for d in data]
+  print('Running the hierarchical cluster for %s tokens for Albert Model...' % embeddings.shape[0])
+  output_file_path = os.path.join(out_dir, f'mean_contextual_clusters.json')
+  if os.path.exists(output_file_path):
+      raise ValueError('Cannot overwrite the output dataset!')
+  os.makedirs(out_dir, mode = 0o777, exist_ok = True) 
+  cluster_and_store(
+    embeddings=embeddings, 
+    wordpieces=raw_wordpieces,
+    knns=knns,
+    output_file_path=output_file_path,
+    partition_strategy=partition_strategy,
+  )
 
 def get_glove(vocab_list, knns, partition_strategy = None):
     """Get Glove clusters. 
@@ -209,6 +232,10 @@ def main():
     # raw_wordpieces = tokenizer.sp_model.id_to_piece(list(range(0, 29999)))
     # vocab_list = list(set([tk.replace('▁', '') for tk in raw_wordpieces]))
     # get_glove()
+  elif args.model.lower() == 'contextual':
+     if not args.input_dir:
+        raise ValueError('for contextual clustering, an input directory containing embedding and tokens are needed.')
+     get_contextual(args.input_dir, out_dir, knns, partition_strategy = None)
   else:
     raise ValueError('Unsupported Model Name. Pick from [Albert, T5, mT5, Gemma, llama]')
 
