@@ -20,11 +20,18 @@ setup(
     ],
     python_requires=">=3.7",  # Adjust based on your code's requirements
     install_requires=[
-        "transformers>=4.0.0",
+        "transformers",
+        "sentencepiece",
         "torch",
         "scikit-learn",
         "numpy",
         "pandas",
+        "networkx",
+        "umap-learn",
+        "torchtext",
+        "Unidecode",
+        # "names-dataset",
+        # "https://github.com/dr5hn/countries-states-cities-database.git"
         # Add other dependencies from your requirements.txt
     ],
 )
