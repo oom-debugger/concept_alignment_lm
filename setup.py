@@ -1,27 +1,30 @@
-import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
-# Utility function to read the README file.
-# Used for the long_description.  It's nice, because now 1) we have a top level
-# README file and 2) it's easier to type in the README file than to put a raw
-# string in below ...
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
 
 setup(
-    name = "embedding_alignment",
-    version = "0.0.4",
-    author = "Mehrdad Khatir",
-    author_email = "mehrdadkhatir@gmail.com",
-    description = ("A package to extract (conceptual) communties given a high dimensional set of embeddings. "),
-    license = "Apache 2.0",
-    keywords = "example documentation tutorial",
-    url = "http://packages.python.org/embedding_alignment",
-    packages=['embedding_alignment', 'tests'],
-    long_description=read('README'),
+    name="concept_alignment_lm",
+    version="0.1.0",  # Or your desired version
+    author="oom-debugger",  # Your GitHub username
+    author_email="your_email@example.com",  # Add your email if you want
+    description="A package for concept alignment with language models.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/oom-debugger/concept_alignment_lm",
+    packages=find_packages(),
     classifiers=[
-        "Development Status :: 3 - Alpha",
-        "Topic :: Utilities",
-        "License :: OSI Approved :: Apache 2.0 License",
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",  # Or your chosen license
+        "Operating System :: OS Independent",
+    ],
+    python_requires=">=3.7",  # Adjust based on your code's requirements
+    install_requires=[
+        "transformers>=4.0.0",
+        "torch",
+        "scikit-learn",
+        "numpy",
+        "pandas",
+        # Add other dependencies from your requirements.txt
     ],
 )
