@@ -142,7 +142,7 @@ def get_mt5(model_name, out_dir, knns, partition_strategy = None):
 def get_switch_base(model_name, out_dir, knns, partition_strategy = None):
   """get T5 clusters. You need to login and authenticate your account on HuggingFace."""
   tokenizer = AutoTokenizer.from_pretrained(model_name)
-  raw_wordpieces = tokenizer.sp_model.id_to_piece(list(range(tokenizer.vocab_size)))
+  raw_wordpieces = tokenizer.convert_ids_to_tokens(list(range(tokenizer.vocab_size)))
   model = SwitchTransformersForConditionalGeneration.from_pretrained(model_name)
   embeddings = model.encoder.embed_tokens.weight.detach().cpu()
   print('Running the hierarchical cluster for %s tokens for mT5 Model...' % embeddings.shape[0])
