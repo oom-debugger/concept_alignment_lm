@@ -5,6 +5,10 @@
 > python3 interpretability/extract_communities.py --model="meta-llama/Llama-3.1-70B" \
     --output_dir=<you dir>
 
+> python3 interpretability/extract_communities.py --model="google/switch-base-64" \
+    --output_dir=<you dir>
+
+
 > python3 interpretability/extract_communities.py \
     --output_dir=/home/ugrads/nonmajors/mehrdadk/experiments/contextual_clusters \
     --input_dir=/home/ugrads/nonmajors/mehrdadk/experiments/aggregated_embeddings
@@ -18,7 +22,7 @@ import warnings
 import torch.nn
 from transformers import  AlbertTokenizer, AlbertModel, AutoModelForCausalLM
 from transformers import AutoTokenizer 
-from transformers import MT5Model, T5Tokenizer, T5Tokenizer, T5EncoderModel
+from transformers import MT5Model, T5Tokenizer, T5Tokenizer, T5EncoderModel, SwitchTransformersForConditionalGeneration
 from transformers import LlamaForCausalLM
 from huggingface_hub import login
 # from torchtext.vocab import GloVe, vocab
@@ -134,6 +138,26 @@ def get_mt5(model_name, out_dir, knns, partition_strategy = None):
     partition_strategy=partition_strategy,
   )
 
+# def get_mt5(model_name="google/switch-base-64", out_dir = './' , knns = [125, 100, 75, 50, 25, 12, 6], partition_strategy = None):
+def get_switch_base(model_name, out_dir, knns, partition_strategy = None):
+  """get T5 clusters. You need to login and authenticate your account on HuggingFace."""
+  tokenizer = AutoTokenizer.from_pretrained(model_name)
+  raw_wordpieces = tokenizer.sp_model.id_to_piece(list(range(tokenizer.vocab_size)))
+  model = SwitchTransformersForConditionalGeneration.from_pretrained(model_name)
+  embeddings = model.encoder.embed_tokens.weight.detach().cpu()
+  print('Running the hierarchical cluster for %s tokens for mT5 Model...' % embeddings.shape[0])
+  output_file_path = os.path.join(out_dir, f'{model_name}_clusters.json')
+  if os.path.exists(output_file_path):
+      raise ValueError('Cannot overwrite the output dataset!')
+  os.makedirs(out_dir, mode = 0o777, exist_ok = True) 
+  cluster_and_store(
+    embeddings=embeddings, 
+    wordpieces=raw_wordpieces,
+    knns=knns,
+    output_file_path=output_file_path,
+    partition_strategy=partition_strategy,
+  )
+
 
 # def get_albert(model_name = 'albert-xxlarge-v2', out_dir = './' ,knns = [125, 100, 75, 50, 25, 12, 6], partition_strategy = None):
 def get_albert(model_name, out_dir, knns, partition_strategy = None, is_input_layer = True):
@@ -230,6 +254,8 @@ def main():
     get_t5(model_name, out_dir, knns, partition_strategy)
   elif 'mt5' in model_name:
     get_mt5(model_name, out_dir, knns, partition_strategy)
+  elif 'switch' in model_name:
+    get_switch_base(model_name, out_dir, knns, partition_strategy)
   elif model_name == 'glove':
     vocab_list = []
     # # This is to get the clusters for the intersection of glove and ALBERT.
@@ -242,7 +268,7 @@ def main():
         raise ValueError('for contextual clustering, an input directory containing embedding and tokens are needed.')
      get_contextual(args.input_dir, out_dir, knns, partition_strategy = None)
   else:
-    raise ValueError('Unsupported Model Name. Pick from [Albert, T5, mT5, Gemma, llama]')
+    raise ValueError('Unsupported Model Name. Pick from [Albert, T5, mT5, Gemma, llama, switch-transformer, contextual].')
 
 
 if __name__ == "__main__":
