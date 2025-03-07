@@ -4,6 +4,13 @@
     --dst_model_name=albert-base-v2  \
     --src_whitespace_char='▁'  \
     --dst_whitespace_char='▁' 
+
+    
+> python3 interpretability/lm_lm_alignment_embedding.py  \
+    --src_model_name=google/switch-base-64 \
+    --dst_model_name=google-t5/t5-11b  \
+    --src_whitespace_char='▁'  \
+    --dst_whitespace_char='▁' 
 """
 import os
 import copy
@@ -16,7 +23,9 @@ from collections import defaultdict
 from torchmetrics.functional import spearman_corrcoef
 from torchmetrics.functional.pairwise import pairwise_cosine_similarity
 from transformers import AutoTokenizer
-from transformers import AlbertForMaskedLM, T5ForConditionalGeneration, AutoModelForCausalLM, LlamaForCausalLM
+from transformers import (
+  AlbertForMaskedLM, T5ForConditionalGeneration, AutoModelForCausalLM, 
+  LlamaForCausalLM, SwitchTransformersForConditionalGeneration)
 
 
 import argparse
@@ -118,6 +127,10 @@ def get_embedding_pool(token_ids, model_name):
   elif 'llama' in model_name.lower():
     # "llama"
     model = LlamaForCausalLM.from_pretrained(model_name)
+    embeddings = model.model.embed_tokens.weight.detach().cpu().to(torch.float16)
+  elif 'switch' in model_name.lower():
+    # "llama"
+    model = SwitchTransformersForConditionalGeneration.from_pretrained(model_name)
     embeddings = model.model.embed_tokens.weight.detach().cpu().to(torch.float16)
   else:
     raise ValueError(f'{model_name} not supported!')
