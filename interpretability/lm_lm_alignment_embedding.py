@@ -131,7 +131,7 @@ def get_embedding_pool(token_ids, model_name):
   elif 'switch' in model_name.lower():
     # "llama"
     model = SwitchTransformersForConditionalGeneration.from_pretrained(model_name)
-    embeddings = model.model.embed_tokens.weight.detach().cpu().to(torch.float16)
+    embeddings = model.encoder.embed_tokens.weight.detach().cpu().to(torch.float16)
   else:
     raise ValueError(f'{model_name} not supported!')
   return embeddings[token_ids, :]
